@@ -10,3 +10,15 @@ print('c:\\users\\timbukcha\\notes.exe')
 
 print(type(11))
 print(type(name))
+
+
+ #numeric values 
+
+a = 12
+b = 3
+
+print(a+b)
+print(a-b)
+print(a%b)
+print(a*b)
+print(a/b)
