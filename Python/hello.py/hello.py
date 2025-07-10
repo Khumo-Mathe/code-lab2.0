@@ -7,3 +7,6 @@ name = "brian"
 print('hello\nmy\nname\nis\nkhumo')
 print('1\t2\t3\t4\t5')
 print('c:\\users\\timbukcha\\notes.exe') 
+
+print(type(11))
+print(type(name))
