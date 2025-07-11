@@ -10,7 +10,7 @@ print('c:\\users\\timbukcha\\notes.exe')
 
 print(type(11))
 print(type(name))
-print(name[2])
+print(name[0:4]) #slincing strigs
 
 
  #numeric values 
