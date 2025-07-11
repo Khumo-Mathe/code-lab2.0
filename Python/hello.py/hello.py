@@ -10,6 +10,7 @@ print('c:\\users\\timbukcha\\notes.exe')
 
 print(type(11))
 print(type(name))
+print(name[2])
 
 
  #numeric values 
