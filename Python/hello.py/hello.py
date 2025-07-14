@@ -30,3 +30,6 @@ letters = "khumo"
 backwards = letters[4::-1]
 print(backwards)
 
+#sequence operators
+
+print("my " "name " "is " "khumo ")
