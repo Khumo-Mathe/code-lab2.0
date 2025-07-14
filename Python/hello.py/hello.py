@@ -42,3 +42,10 @@ age= 25
 print("you are {0} years old ".format(age))  #string replacement
 print("in a {0} you work in {1}, {2}, {3}, {4}, {5}"
       .format("week", "monday", "tuesday", "wednesday","thursday", "friday"))
+ 
+
+#advanced string formatting
+print("\tmultiples of Two.")
+
+for i in range(1, 11):
+     print("2 Times {}  is {}".format( i, 2* i))
