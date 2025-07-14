@@ -33,3 +33,4 @@ print(backwards)
 #sequence operators
 
 print("my " "name " "is " "khumo ")
+print("ha "* 7)
