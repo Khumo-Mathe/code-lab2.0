@@ -34,3 +34,6 @@ print(backwards)
 
 print("my " "name " "is " "khumo ")
 print("ha "* 7)
+
+age= 25
+print("you are {0} years old ".format(age))  #string replacement
