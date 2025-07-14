@@ -24,4 +24,6 @@ print(a%b)
 print(a*b)
 print(a/b)  
 
-#control flow
+letters = "khumo"
+backwards = letters[7:0:-1]
+print(backwards)
