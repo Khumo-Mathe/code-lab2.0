@@ -24,6 +24,9 @@ print(a%b)
 print(a*b)
 print(a/b)  
 
+#backward slicing
+
 letters = "khumo"
-backwards = letters[7:0:-1]
+backwards = letters[4::-1]
 print(backwards)
+
