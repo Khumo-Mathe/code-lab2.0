@@ -1,4 +1,6 @@
 from calendar import week
+from math import pi
+
 
 
 print('hello, world!')
@@ -45,9 +47,9 @@ print("in a {0} you work in {1}, {2}, {3}, {4}, {5}"
  
 
 #advanced string formatting
-print("*" *40)
+print("_" *40)
 print("\tmultiples of Two.")
-print("*" *40)
+print("_" *40)
 
 for i in range(1, 11):
      print("2 Times {:2}  is {:4}".format( i, 2* i)) #aligning values {:x}
@@ -58,4 +60,11 @@ age=25
 print("you are %d years old" %age)
 
 
-#flow control techniques
+
+
+#program tha calculates the area of a circle based om the entered radius
+
+radius = float(input("enter radius: "))
+area = pi * radius**2 # type: ignore
+
+print("r : " + str(radius) + "\narea : " + str(area))
