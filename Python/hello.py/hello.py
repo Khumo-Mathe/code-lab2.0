@@ -48,4 +48,4 @@ print("in a {0} you work in {1}, {2}, {3}, {4}, {5}"
 print("\tmultiples of Two.")
 
 for i in range(1, 11):
-     print("2 Times {}  is {}".format( i, 2* i))
+     print("2 Times {:2}  is {:4}".format( i, 2* i))
