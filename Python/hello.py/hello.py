@@ -1,3 +1,6 @@
+from calendar import week
+
+
 print('hello, world!')
 print(32)
 print()
@@ -37,3 +40,5 @@ print("ha "* 7)
 
 age= 25
 print("you are {0} years old ".format(age))  #string replacement
+print("in a {0} you work in {1}, {2}, {3}, {4}, {5}"
+      .format("week", "monday", "tuesday", "wednesday","thursday", "friday"))
