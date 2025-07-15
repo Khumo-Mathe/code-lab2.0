@@ -71,6 +71,6 @@ print("r:" + str(radius) + "\narea : " + str(area))
 
 #input fileds and control flow
 
-name= input(print("what is your name? "))
+name= input("what is your name? ")
 age= int (input("hi {0}, how old are you? " .format(name)))
-print("you are " age  "years old! ")
+print( "you are {}" .format(age))
