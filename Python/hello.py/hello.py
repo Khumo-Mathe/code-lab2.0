@@ -67,4 +67,10 @@ print("you are %d years old" %age)
 radius = float(input("enter radius: "))
 area = pi * radius**2 # type: ignore
 
-print("r : " + str(radius) + "\narea : " + str(area))
+print("r:" + str(radius) + "\narea : " + str(area))
+
+#input fileds and control flow
+
+name= input(print("what is your name? "))
+age= int (input("hi {0}, how old are you? " .format(name)))
+print("you are " age  "years old! ")
