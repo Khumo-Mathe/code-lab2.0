@@ -1,11 +1,12 @@
-#a code that checks if a user is valid for a drivers licenece
+answer = 5
+print("please guess a number between 1 and 10:")
 
-name = input("what is your name? ")
-age = int(input(" hi {0} how old are you? " .format(name)))
-print("you are {} years old"  .format(age))
+guess = int(input())
 
-if age >= 18:
-    print("you are legible to drive {0} ".format(name))
-
-else:
-    print("you are under age {1} ,please come back in {0} years ".format(18-age , name))
+if guess > answer:
+    print("guess lower")
+elif guess < answer:
+    print("guess higher")
+else :
+    print("CORRECT")
+   
