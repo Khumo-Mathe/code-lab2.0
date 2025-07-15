@@ -9,4 +9,3 @@ if age >= 18:
 
 else:
     print("you are under age {1} ,please come back in {0} years ".format(18-age , name))
-
