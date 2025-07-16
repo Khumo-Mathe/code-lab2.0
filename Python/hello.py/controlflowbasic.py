@@ -1,9 +1,19 @@
-x = 54
-y = 54
+answer=5
+guess=int(input())
 
-if x > y :
-    print("x is greater than y")
-elif x < y :
-    print("x is smaller than y")
+if answer>guess:
+    print ("please guess higher")
+    guess=int(input())
+    if answer==guess:
+        print("guess is correct")
+    else:
+        print("sorry guess was in correct")
+elif answer<guess:
+    print("please guess lower")
+    guess=int(input())
+    if answer==guess:
+        print("answer is correct")
+    else:
+        print("sorry guess was incorrect")
 else:
-    print("x is equal to y")
+    print("guess is correct")
