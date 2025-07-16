@@ -1,5 +1,5 @@
 x = 54
-y = 7
+y = 54
 
 if x > y :
     print("x is greater than y")
