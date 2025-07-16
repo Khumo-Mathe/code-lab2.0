@@ -1,12 +1,8 @@
-answer = 5
-print("please guess a number between 1 and 10:")
+#string compariso: using if
+tree1=("khumo")
+tree2=("khumo")
 
-guess = int(input())
-
-if guess > answer:
-    print("guess lower")
-elif guess < answer:
-    print("guess higher")
-else :
-    print("CORRECT")
-   
+if tree1 == tree2 :
+    print("trees are the same")
+else:
+    print("trees are different")
