@@ -1,8 +1,9 @@
-#string compariso: using if
-tree1=("khumo")
-tree2=("khumo")
+x = 5
+y = 7
 
-if tree1 == tree2 :
-    print("trees are the same")
+if x > y :
+    print("x is greater than y")
+elif x < y :
+    print("x is smaller than y")
 else:
-    print("trees are different")
+    print("x is equal to y")
