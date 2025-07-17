@@ -1,4 +1,5 @@
 #password strength checker
+password = input("Enter your password: ")
 
 def check_password_strength(password):
 
