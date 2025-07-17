@@ -1,19 +1,11 @@
-answer=5
-guess=int(input())
+#program that checks idf a given number is "special",a number is special its divible by 5 or 3 
+#not both at the same time
+print("insert number")
+number = int(input())
 
-if answer>guess:
-    print ("please guess higher")
-    guess=int(input())
-    if answer==guess:
-        print("guess is correct")
-    else:
-        print("sorry guess was in correct")
-elif answer<guess:
-    print("please guess lower")
-    guess=int(input())
-    if answer==guess:
-        print("answer is correct")
-    else:
-        print("sorry guess was incorrect")
+if (number % 3 == 0 or number % 5==0):
+     print(" special")
+elif (number % 3 == 0 and number % 5==0):
+     print("not special")
 else:
-    print("guess is correct")
+     print("not special")
