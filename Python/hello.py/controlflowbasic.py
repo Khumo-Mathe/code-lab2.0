@@ -1,17 +1,10 @@
-#boolean
-
-day = "saturday"
-temperature= 30
-raining = False
-
-if (day == "saturday" and temperature > 28 ) and not raining:
-    print("go to swim")
-else:
-    print("study python")
-
-
-
-
+#using in and not in
+word = "hello"
+letter = input("Enter a letter: ")
+if letter in word:
+    print("The letter is in the word.")
+if letter not in word:
+    print("The letter is not in the word.") 
 
 
 
