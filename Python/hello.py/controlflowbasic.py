@@ -3,9 +3,9 @@
 print("insert number")
 number = int(input())
 
-if (number % 3 == 0 or number % 5==0):
-     print(" special")
-elif (number % 3 == 0 and number % 5==0):
+if (number % 3 == 0 and number % 5==0):
      print("not special")
+elif (number % 3 == 0 or number % 5==0):
+     print("special")
 else:
      print("not special")
