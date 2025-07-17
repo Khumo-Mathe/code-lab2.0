@@ -1,9 +1,17 @@
-#program that checks idf a given number is "special",a number is special its divible by 5 or 3 
-#not both at the same time
+#boolean
 
-number = int(input("insert number: "))
+day = "saturday"
+temperature= 30
+raining = False
 
-if (number % 3 == 0 or number % 5==0) and not (number % 3 == 0 and number % 5==0):
-     print("special")
+if (day == "saturday" and temperature > 28 ) and not raining:
+    print("go to swim")
 else:
-     print("not special")
+    print("study python")
+
+
+
+
+
+
+
