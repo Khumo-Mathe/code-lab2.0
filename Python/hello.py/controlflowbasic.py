@@ -14,4 +14,7 @@ def check_password_strength(password):
     
     if not any(char.islower() for char in password):
         return "Weak password: Password must contain at least one lowercase letter."
-    return "Strong password."
+    else:
+        return "Strong password."
+    "Strong password."
+print(check_password_strength(password))
