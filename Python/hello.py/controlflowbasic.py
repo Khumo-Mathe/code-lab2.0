@@ -1,24 +1,16 @@
-#password strength checker
-password = input("Enter your password: ")
+#grade categorizer
 
-def check_password_strength(password):
+grade = int(input("Enter your grade: "))
 
-    if len(password) < 8:
-        return "Weak password: Password must be at least 8 characters long."
-    
-    if not any(char.isdigit() for char in password):
-        return "Weak password: Password must contain at least one number."
-    
-    if not any(char.isupper() for char in password):
-        return "Weak password: Password must contain at least one uppercase letter."
-    
-    if not any(char.islower() for char in password):
-        return "Weak password: Password must contain at least one lowercase letter."
-
-    if not any(char in "!@#$%^&*()-+" for char in password):
-        return "Weak password: Password must contain at least one special character."
-
-    return "Strong password."
-
-print(check_password_strength(password))
+def categorize_grade(grade):
+    if grade >= 75:
+        return "A"
+    elif grade >= 80:
+        return "B"
+    elif grade >= 70:
+        return "C"
+    elif grade >= 60:
+        return "D"
+    else:
+        return "F"
   
