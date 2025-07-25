@@ -2,8 +2,9 @@
 import re
 
 
-class Solution:   
-    def roman_to_int(self, s: str ) ->  int:
+class Solution:
+
+    def roman_to_int(self, s: str) -> int:
 
       roman = {
           'I': 1,
