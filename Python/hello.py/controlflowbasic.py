@@ -1,5 +1,6 @@
-for i in range(0,30, 3):
-    print("i is now {}".format(i)) # This will print i in steps of 3
+for i in range(0,100,7): # Loop from 0 to 99 with a step of 7
+    print(i, end=' ')
+    
      
 
   
