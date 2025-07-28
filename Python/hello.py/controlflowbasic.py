@@ -1,6 +1,9 @@
 fruits = ["apple", "banana", "cherry", "date", "elderberry"]
 
-for fruit in fruits:
-    if fruit == "date":
-        continue
-    print(f"I like {fruit}") # This will skip printing "date" and continue with the next fruit
+fruit_to_find = "cherry"
+index = None
+
+for index in range(len(fruits)):
+    if fruits[index] == fruit_to_find:
+        print(f"Found {fruit_to_find} at index {index}")
+        break # If found, exit the loop                  
