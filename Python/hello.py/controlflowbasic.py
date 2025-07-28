@@ -1,8 +1,6 @@
-for i in range(1, 11):
-    for j in range(1, 11):
-        print("{0} times {1} = {2}".format(i, j, i * j))
-    print("" * 10)  # Print a separator line after each table
+fruits = ["apple", "banana", "cherry", "date", "elderberry"]
 
-     
-
-  
+for fruit in fruits:
+    if fruit == "date":
+        continue
+    print(f"I like {fruit}") # This will skip printing "date" and continue with the next fruit
