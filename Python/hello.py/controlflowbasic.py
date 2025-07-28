@@ -1,6 +1,8 @@
-for i in range(0,100,7): # Loop from 0 to 99 with a step of 7
-    print(i, end=' ')
-    
+for i in range(1, 11):
+    for j in range(1, 11):
+        print("{0} times {1} = {2}".format(i, j, i * j))
+    print("" * 10)  # Print a separator line after each table
+
      
 
   
