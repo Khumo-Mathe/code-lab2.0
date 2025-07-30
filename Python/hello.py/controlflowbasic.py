@@ -1,25 +1,46 @@
-#system that processses different types of payments:crredit card, cryptoqurrency, and paypal
+#problem : access contol in library system 
 
-class PaymentMethod:
-    def pay(self, amount):
-        raise NotImplementedError("Subclasses should implement this!")
+from dbm.ndbm import library
+
+
+class User:
+    def __init__(self, name):
+        self.name = name
+        
+    def get_role(self):
+        raise NotImplementedError("Subclasses should implement this method")
     
-class CreditCard(PaymentMethod):
-    def pay(self, amount):
-        print(f"Paying {amount} using Credit Card")
+class Librarian(User):
+    def get_role(self):
+        return "Librarian"
+    
+    def add_book(self, book, library):
+        library.append(book)
+        print(f"{self.name} added {book.title} to the library.")
 
-class Cryptocurrency(PaymentMethod):
-    def pay(self, amount):
-        print(f"Paying {amount} using Cryptocurrency")
+class Member(User):
+    def get_role(self):
+        return "Member"
+    
+    def borrow_book(self, book, library):
+        if book in library:
+            library.remove(book)
+            print(f"{self.name} borrowed {book.title}.")
+        else:
+            print(f"{book.title} is not available in the library.")
 
-class PayPal(PaymentMethod):
-    def pay(self, amount):
-        print(f"Paying {amount} using PayPal")
 
+def run_library_system():
+    library = ["The Great Gatsby", "Moby Dick", "War and Peace"]
+    
+    # Create users
+    users = [Librarian("Alice"), Member("Bob")]
 
-class Order:
-    def __init__(self, amount, payment_method: PaymentMethod):
-        self.payment_method = payment_method
+    for user in users:
+        print(f"{user.name} is a {user.get_role()}.")
 
-    def process_payment(self, amount):
-        self.payment_method.pay(amount)
+        if user.get_role() == "Librarian":
+            user.add_book("1984", library)
+        elif user.get_role() == "Member":
+            user.borrow_book("Moby Dick", library)
+
