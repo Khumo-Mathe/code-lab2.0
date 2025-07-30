@@ -1,15 +1,26 @@
-#basic polymorphism
+#system that processses different types of payments:crredit card, cryptoqurrency, and paypal
 
-class Duck:
-    def quack(self):
-        print("Quack!")
+class PaymentMethod:
+    def pay(self, amount):
+        raise NotImplementedError("Subclasses should implement this!")
+    
+class CreditCard(PaymentMethod):
+    def pay(self, amount):
+        print(f"Paying {amount} using Credit Card")
 
-class Human:
-    def quack(self):
-        print("Quack! Quack!, like a duck")
+class Cryptocurrency(PaymentMethod):
+    def pay(self, amount):
+        print(f"Paying {amount} using Cryptocurrency")
 
-def make_it_quack(thing):
-    thing.quack()
+class PayPal(PaymentMethod):
+    def pay(self, amount):
+        print(f"Paying {amount} using PayPal")
 
-make_it_quack(Duck())  # Prints "Quack!"
-make_it_quack(Human())  # Prints "Quack! Quack!, like a duck"
+
+class Order:
+    def __init__(self, amount, payment_method):
+        self.amount = amount
+        self.payment_method = payment_method
+
+    def process_payment(self):
+        self.payment_method.pay(self.amount)
