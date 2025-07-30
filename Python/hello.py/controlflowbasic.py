@@ -1,9 +1,20 @@
-number=5
-multiplier = 8
-answer = 0
+#basic inheritence 
 
-for i in range(multiplier):
-    answer+= number
+class Animal:
+   def speak(self):
+      return "some sound"
 
-print("The answer is:", answer)
-# This code multiplies the number by 8 using a loop and prints the result.  
+
+class Dog(Animal):
+   def speak(self):
+     return "woof"
+
+class Cat(Animal):
+   def speak(self):
+     return "meow"
+
+dog = Dog()
+print(dog.speak())
+
+cat = Cat()
+print(cat.speak())
