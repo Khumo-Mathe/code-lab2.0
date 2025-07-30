@@ -18,9 +18,8 @@ class PayPal(PaymentMethod):
 
 
 class Order:
-    def __init__(self, amount, payment_method):
-        self.amount = amount
+    def __init__(self, amount, payment_method: PaymentMethod):
         self.payment_method = payment_method
 
-    def process_payment(self):
-        self.payment_method.pay(self.amount)
+    def process_payment(self, amount):
+        self.payment_method.pay(amount)
