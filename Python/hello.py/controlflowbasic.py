@@ -13,8 +13,8 @@ class Cat(Animal):
    def speak(self):
      return "meow"
 
-dog = Dog()
-print(dog.speak())
+def animal_sound(animal: Animal):  # polymorphic function
+   print(animal.speak()) # this will call the speak method of the specific animal type
 
-cat = Cat()
-print(cat.speak())
+animal_sound(Dog())
+animal_sound(Cat())
