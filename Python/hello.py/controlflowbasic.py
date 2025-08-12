@@ -1,14 +1,22 @@
+# FizzBuzz function that returns a list of FizzBuzz results
+from typing import List
 
-Number = int(input("Enter a number: "))
-if Number > 100:
-    print("number too high, enter number lower than 100")
-else:
-    for num in range(1, Number + 1):
-        if num % 3 == 0 and num % 5 == 0:
-            print("FizzBuzz")
-        elif num % 5 == 0:
-            print("Buzz")
+
+def fizzbuzz( number : int) -> List[str]:
+    result = []
+
+    
+
+    for num in range(1, number + 1):
+        if num % 5 == 0 and num % 3 == 0:
+            result.append("fizzbuzz")  
         elif num % 3 == 0:
-            print("Fizz")
+            result.append("fizz")                            
+        elif num % 5 == 0:
+            result.append("buzz")
         else:
-            print(num)
+            result.append(str(num))
+    return result
+number = int(input("enter number: "))
+
+print(fizzbuzz(number))  # Print the result of the fizzbuzz function
