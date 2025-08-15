@@ -1,23 +1,19 @@
-def SouthAfrica():
-    capital_city={
-        "Gauteng" :"johannesburg",
-        "NorthWest" : "mahikeng",
-        "NorthenCape" : "kimberly",
-        "WesternCape" : "capetown",
-        "EasternCape" : "eastlondon",
-        "KwaZuluNatal" : "durban",
-        "Mpumalanga" : "nelspruit",
-        "FreeState" : "bloemfontein",
+class  solution :
+    def largestgoodinterger(num:str):
+        max_good = ""
+        
+        for i in range(0,len(num)-3):
+            sub = num [i : i + 3]
+            if sub[0] == sub[1] == sub [2]:
+                if sub > max_good:
+                    max_good = sub
+        return max_good            
+                
         
         
-    }
-    
-    province = input("enter province to get the capital city: ")
-    
-    capital = capital_city.get(province,"capital not found")
-    print(f"the capital of {province} is :  {capital}")
-SouthAfrica()  
-    
+        
+        
+      
     
 
 
