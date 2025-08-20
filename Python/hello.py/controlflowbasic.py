@@ -1,21 +1,15 @@
-class Solution:
-    def twoSum(self, nums: int, target: int) -> int:
-        seen = {}
-        
-        for i, num in enumerate(nums):
-            difference = target - num
-            if difference in seen:
-                return [seen[difference],i]
-            seen[num] = i
-        return[]         
-        
-                
-        
-        
-        
-        
-      
-    
+# basic list operations
 
+odd = [2,4,6,8,10]      
 
-        
+even = [1,3,5,7,9]
+
+odd.extend(even)
+print(odd)
+odd.sort()
+print(odd)
+odd.reverse()
+print(odd)
+
+even.reverse()
+print(even)
