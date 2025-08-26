@@ -1,15 +1,7 @@
-# basic list operations
-
-odd = [2,4,6,8,10]      
-
-even = [1,3,5,7,9]
-
-odd.extend(even)
-print(odd)
-odd.sort()
-print(odd)
-odd.reverse()
-print(odd)
-
-even.reverse()
-print(even)
+class Solution:
+    def shuffle(self, nums, n):
+        result = []
+        for i in range(n):
+            result.append(nums[i])       # take from first half
+            result.append(nums[i + n])   # take from second half
+        return result
