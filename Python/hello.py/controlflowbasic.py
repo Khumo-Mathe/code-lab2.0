@@ -1,5 +1,5 @@
-#split method to split a string
-sentence = "THIS IS A TEST"
+#join method to join a list into a string
+list = ["I","LOVE","PYTHON"] 
 
-SPLIT = sentence.split()    
-print(SPLIT)
+join = " ".join(list)    
+print(join)
