@@ -1,15 +1,11 @@
-#valid parentheses
-def is_valid_parentheses(s):
-    stack = []
-    mapping = {")": "(", "}": "{", "]": "["}
+def find_largest(numbers):
+    if not numbers:  # Handle empty list
+        return None
     
-    for char in s:
-        
-        if char in mapping:
-            top_element = stack.pop() if stack else "#"
-            if mapping[char] != top_element:
-                return False
-        else:
-            stack.append(char)
-            
-    return not stack
+    largest = numbers[0]
+    
+    for num in numbers:
+        if num > largest:
+            largest = num
+    
+    return largest
