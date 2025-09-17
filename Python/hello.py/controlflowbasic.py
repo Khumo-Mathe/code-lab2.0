@@ -1,24 +1,26 @@
-def binary_search(arr, target):
-    """Perform binary search on a sorted array.
+import random
 
-    Args:
-        arr (list): A sorted list of elements.
-        target: The element to search for.
+def generate_maze(width, height):
+    maze = [["#" for _ in range(width)] for _ in range(height)]
 
-    Returns:
-        int: The index of the target element if found, otherwise -1.
-    """
-    left, right = 0, len(arr) - 1
+    def carve_passages(x, y):
+        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+        random.shuffle(directions)
 
-    while left <= right:
-        mid = (left + right) // 2
-        mid_value = arr[mid]
+        for dx, dy in directions:
+            nx, ny = x + dx * 2, y + dy * 2
+            if 0 < nx < width and 0 < ny < height and maze[ny][nx] == "#":
+                maze[ny - dy][nx - dx] = " "
+                maze[ny][nx] = " "
+                carve_passages(nx, ny)
 
-        if mid_value == target:
-            return mid
-        elif mid_value < target:
-            left = mid + 1
-        else:
-            right = mid - 1
+    maze[1][1] = " "
+    carve_passages(1, 1)
+    return maze
 
-    return -1
+def display_maze(maze):
+    return "\n".join("".join(row) for row in maze)
+
+# Example usage
+maze = generate_maze(21, 15)
+print(display_maze(maze))
