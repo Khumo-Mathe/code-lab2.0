@@ -1,26 +1,16 @@
 import random
 
-def generate_maze(width, height):
-    maze = [["#" for _ in range(width)] for _ in range(height)]
+def generate_startup_names(n=5):
+    adjectives = ["Quantum", "Neural", "Hyper", "Aero", "Cyber", "Fusion", "Eco", "Nano", "Meta", "Ultra"]
+    nouns = ["Labs", "Systems", "Dynamics", "Tech", "Analytics", "Solutions", "Cloud", "Works", "Networks", "Forge"]
 
-    def carve_passages(x, y):
-        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-        random.shuffle(directions)
+    names = []
+    for _ in range(n):
+        name = f"{random.choice(adjectives)} {random.choice(nouns)}"
+        names.append(name)
 
-        for dx, dy in directions:
-            nx, ny = x + dx * 2, y + dy * 2
-            if 0 < nx < width and 0 < ny < height and maze[ny][nx] == "#":
-                maze[ny - dy][nx - dx] = " "
-                maze[ny][nx] = " "
-                carve_passages(nx, ny)
-
-    maze[1][1] = " "
-    carve_passages(1, 1)
-    return maze
-
-def display_maze(maze):
-    return "\n".join("".join(row) for row in maze)
+    return names
 
 # Example usage
-maze = generate_maze(21, 15)
-print(display_maze(maze))
+if __name__ == "__main__":
+    print(generate_startup_names(7))
