@@ -1,17 +1,17 @@
-def fizzbuzz(n: int) -> list:
-    result = []
+def two_sum(nums: list, target: int) -> list:
+    seen = {}
 
-    for i in range(1, n + 1):
-        if i % 3 == 0 and i % 5 == 0:
-            result.append("FizzBuzz")
-        elif i % 3 == 0:
-            result.append("Fizz")
-        elif i % 5 == 0:
-            result.append("Buzz")
-        else:
-            result.append(i)
+    for index, value in enumerate(nums):
+        complement = target - value
 
-    return result
+        if complement in seen:
+            return [seen[complement], index]
 
+        seen[value] = index
+
+    return []
+# Example usage:
+# print(two_sum([2, 7, 11, 15], 9))     # Output: [0, 1]
+# print(two_sum([3, 2, 4], 6))          # Output
 
 
