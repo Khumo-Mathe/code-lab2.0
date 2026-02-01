@@ -1,21 +1,37 @@
-import time
-from collections import deque
+def check_password_strength(password: str) -> dict:
+    result = {
+        "length": False,
+        "uppercase": False,
+        "lowercase": False,
+        "digit": False,
+        "special": False,
+        "is_strong": False
+    }
 
-def is_request_allowed(user_id, request_log, max_requests, window_seconds):
-    current_time = time.time()
+    # Rule 1: length check
+    if len(password) >= 8:
+        result["length"] = True
 
-    if user_id not in request_log:
-        request_log[user_id] = deque()
+    # Rule 2–5: character checks
+    for char in password:
+        if char.isupper():
+            result["uppercase"] = True
+        elif char.islower():
+            result["lowercase"] = True
+        elif char.isdigit():
+            result["digit"] = True
+        elif not char.isalnum():
+            result["special"] = True
 
-    timestamps = request_log[user_id]
+    # Final decision
+    result["is_strong"] = all([
+        result["length"],
+        result["uppercase"],
+        result["lowercase"],
+        result["digit"],
+        result["special"]
+    ])
 
-    while timestamps and current_time - timestamps[0] > window_seconds:
-        timestamps.popleft()
-
-    if len(timestamps) < max_requests:
-        timestamps.append(current_time)
-        return True
-
-    return False
+    return result
 
 
