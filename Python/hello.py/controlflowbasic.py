@@ -1,17 +1,26 @@
-def two_sum(nums: list, target: int) -> list:
-    seen = {}
+class LRUCache:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.cache = {}
+        self.order = []
 
-    for index, value in enumerate(nums):
-        complement = target - value
+    def get(self, key):
+        if key not in self.cache:
+            return None
 
-        if complement in seen:
-            return [seen[complement], index]
+        self.order.remove(key)
+        self.order.append(key)
+        return self.cache[key]
 
-        seen[value] = index
+    def put(self, key, value):
+        if key in self.cache:
+            self.order.remove(key)
 
-    return []
-# Example usage:
-# print(two_sum([2, 7, 11, 15], 9))     # Output: [0, 1]
-# print(two_sum([3, 2, 4], 6))          # Output
+        elif len(self.cache) >= self.capacity:
+            lru_key = self.order.pop(0)
+            del self.cache[lru_key]
+
+        self.cache[key] = value
+        self.order.append(key)
 
 
