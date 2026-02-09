@@ -1,18 +1,25 @@
-import heapq
+import hashlib
+import bisect
 
-class TaskScheduler:
-    def __init__(self):
-        self.queue = []
+def hash_value(key: str) -> int:
+    return int(hashlib.md5(key.encode()).hexdigest(), 16)
 
-    def add_task(self, priority, task_name):
-        heapq.heappush(self.queue, (-priority, task_name))
+def assign_server(servers: list[str], request_id: str) -> str:
+    """
+    Assigns a request to a server using Consistent Hashing
+    """
+    # Hash servers
+    server_hashes = sorted((hash_value(server), server) for server in servers)
 
-    def run_next_task(self):
-        if not self.queue:
-            return None
+    # Hash request
+    request_hash = hash_value(request_id)
 
-        priority, task_name = heapq.heappop(self.queue)
-        return task_name
+    # Find first server clockwise
+    positions = [h[0] for h in server_hashes]
+    index = bisect.bisect(positions, request_hash)
+
+    # Wrap around if needed
+    return server_hashes[index % len(servers)][1]
 
 
 
