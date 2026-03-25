@@ -1,21 +1,21 @@
+import heapq
 
-import time
-import random
+def dijkstra(graph, start):
+    distances = {node: float('inf') for node in graph}
+    distances[start] = 0
+    queue = [(0, start)]
 
+    while queue:
+        current_distance, current_node = heapq.heappop(queue)
 
-def retry_with_backoff(operation, max_retries=5, base_delay=1.0):
-    attempts = 0
+        if current_distance > distances[current_node]:
+            continue
 
-    while attempts < max_retries:
-        try:
-            return operation()
+        for neighbor, weight in graph[current_node].items():
+            distance = current_distance + weight
 
-        except Exception as e:
-            delay = base_delay * (2 ** attempts)
-            jitter = random.uniform(0, delay)
+            if distance < distances[neighbor]:
+                distances[neighbor] = distance
+                heapq.heappush(queue, (distance, neighbor))
 
-            time.sleep(jitter)
-
-            attempts += 1
-
-    return None
+    return distances
