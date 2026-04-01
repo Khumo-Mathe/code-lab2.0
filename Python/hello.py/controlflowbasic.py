@@ -1,36 +1,51 @@
-import heapq
-
-def a_star(graph, start, goal, heuristic):
-    open_set = [(0, start)]
-    g_cost = {node: float('inf') for node in graph}
-    g_cost[start] = 0
-
-    came_from = {}
-
-    while open_set:
-        _, current = heapq.heappop(open_set)
-
-        if current == goal:
-            return reconstruct_path(came_from, current)
-
-        for neighbor, weight in graph[current].items():
-            tentative_g = g_cost[current] + weight
-
-            if tentative_g < g_cost[neighbor]:
-                came_from[neighbor] = current
-                g_cost[neighbor] = tentative_g
-
-                f_cost = tentative_g + heuristic(neighbor, goal)
-                heapq.heappush(open_set, (f_cost, neighbor))
-
-    return []
+class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.is_end = False
 
 
-def reconstruct_path(came_from, current):
-    path = [current]
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
 
-    while current in came_from:
-        current = came_from[current]
-        path.append(current)
+    def insert(self, word):
+        node = self.root
 
-    return path[::-1]
+        for char in word:
+            if char not in node.children:
+                node.children[char] = TrieNode()
+
+            node = node.children[char]
+
+        node.is_end = True
+
+    def search(self, word):
+        node = self.root
+
+        for char in word:
+            if char not in node.children:
+                return False
+            node = node.children[char]
+
+        return node.is_end
+
+    def starts_with(self, prefix):
+        node = self.root
+
+        for char in prefix:
+            if char not in node.children:
+                return []
+            node = node.children[char]
+
+        return self._collect_words(node, prefix)
+
+    def _collect_words(self, node, prefix):
+        results = []
+
+        if node.is_end:
+            results.append(prefix)
+
+        for char, child in node.children.items():
+            results.extend(self._collect_words(child, prefix + char))
+
+        return results
