@@ -1,36 +1,34 @@
-import time
+import hashlib
 
 
-class CircuitBreaker:
-    def __init__(self, failure_threshold=3, recovery_time=5):
-        self.failure_threshold = failure_threshold
-        self.recovery_time = recovery_time
+class HyperLogLog:
+    def __init__(self, num_buckets=16):
+        self.num_buckets = num_buckets
+        self.buckets = [0] * num_buckets
 
-        self.failure_count = 0
-        self.state = "CLOSED"
-        self.last_failure_time = None
+    def _hash(self, item):
+        return int(hashlib.md5(item.encode()).hexdigest(), 16)
 
-    def call(self, operation):
-        if self.state == "OPEN":
-            if time.time() - self.last_failure_time > self.recovery_time:
-                self.state = "HALF-OPEN"
+    def _leading_zeros(self, binary_str):
+        count = 0
+        for bit in binary_str:
+            if bit == '0':
+                count += 1
             else:
-                return None
+                break
+        return count
 
-        try:
-            result = operation()
+    def add(self, item):
+        hashed = self._hash(item)
 
-            if self.state == "HALF-OPEN":
-                self.state = "CLOSED"
-                self.failure_count = 0
+        bucket_index = hashed % self.num_buckets
 
-            return result
+        binary = bin(hashed)[2:]
 
-        except Exception:
-            self.failure_count += 1
-            self.last_failure_time = time.time()
+        zeros = self._leading_zeros(binary)
 
-            if self.failure_count >= self.failure_threshold:
-                self.state = "OPEN"
+        self.buckets[bucket_index] = max(self.buckets[bucket_index], zeros)
 
-            return None
+    def estimate(self):
+        total = sum([2 ** (-bucket) for bucket in self.buckets])
+        return int(self.num_buckets ** 2 / total)
