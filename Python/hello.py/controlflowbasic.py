@@ -1,51 +1,27 @@
-class TrieNode:
-    def __init__(self):
-        self.children = {}
-        self.is_end = False
+import time
 
 
-class Trie:
-    def __init__(self):
-        self.root = TrieNode()
+class TokenBucket:
+    def __init__(self, capacity, refill_rate):
+        self.capacity = capacity          # max tokens
+        self.tokens = capacity            # current tokens
+        self.refill_rate = refill_rate    # tokens per second
+        self.last_refill = time.time()
 
-    def insert(self, word):
-        node = self.root
+    def _refill(self):
+        current_time = time.time()
+        elapsed = current_time - self.last_refill
 
-        for char in word:
-            if char not in node.children:
-                node.children[char] = TrieNode()
+        new_tokens = elapsed * self.refill_rate
+        self.tokens = min(self.capacity, self.tokens + new_tokens)
 
-            node = node.children[char]
+        self.last_refill = current_time
 
-        node.is_end = True
+    def allow_request(self):
+        self._refill()
 
-    def search(self, word):
-        node = self.root
+        if self.tokens >= 1:
+            self.tokens -= 1
+            return True
 
-        for char in word:
-            if char not in node.children:
-                return False
-            node = node.children[char]
-
-        return node.is_end
-
-    def starts_with(self, prefix):
-        node = self.root
-
-        for char in prefix:
-            if char not in node.children:
-                return []
-            node = node.children[char]
-
-        return self._collect_words(node, prefix)
-
-    def _collect_words(self, node, prefix):
-        results = []
-
-        if node.is_end:
-            results.append(prefix)
-
-        for char, child in node.children.items():
-            results.extend(self._collect_words(child, prefix + char))
-
-        return results
+        return False
