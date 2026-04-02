@@ -1,31 +1,28 @@
-from collections import defaultdict
+import random
 
 
-def map_function(data):
-    results = []
+class Node:
+    def __init__(self, node_id):
+        self.node_id = node_id
+        self.data = set()
 
-    for line in data:
-        words = line.split()
+    def gossip(self, nodes):
+        if not nodes:
+            return
 
-        for word in words:
-            results.append((word, 1))
+        target = random.choice(nodes)
 
-    return results
+        # merge knowledge
+        combined = self.data.union(target.data)
 
-
-def reduce_function(mapped_data):
-    result = defaultdict(int)
-
-    for word, count in mapped_data:
-        result[word] += count
-
-    return dict(result)
+        self.data = combined
+        target.data = combined
 
 
-def map_reduce(data_chunks):
-    mapped = []
+def run_gossip(nodes, rounds=5):
+    for _ in range(rounds):
+        for node in nodes:
+            other_nodes = [n for n in nodes if n != node]
+            node.gossip(other_nodes)
 
-    for chunk in data_chunks:
-        mapped.extend(map_function(chunk))
-
-    return reduce_function(mapped)
+    return [node.data for node in nodes]
