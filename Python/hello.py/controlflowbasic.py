@@ -1,34 +1,33 @@
-import hashlib
+import time
+import uuid
 
 
-class HyperLogLog:
-    def __init__(self, num_buckets=16):
-        self.num_buckets = num_buckets
-        self.buckets = [0] * num_buckets
+class DistributedLock:
+    def __init__(self):
+        self.locks = {}
 
-    def _hash(self, item):
-        return int(hashlib.md5(item.encode()).hexdigest(), 16)
+    def acquire_lock(self, resource, ttl=5):
+        current_time = time.time()
+        lock_id = str(uuid.uuid4())
 
-    def _leading_zeros(self, binary_str):
-        count = 0
-        for bit in binary_str:
-            if bit == '0':
-                count += 1
-            else:
-                break
-        return count
+        if resource not in self.locks:
+            self.locks[resource] = (lock_id, current_time + ttl)
+            return lock_id
 
-    def add(self, item):
-        hashed = self._hash(item)
+        existing_lock_id, expiry = self.locks[resource]
 
-        bucket_index = hashed % self.num_buckets
+        if current_time > expiry:
+            self.locks[resource] = (lock_id, current_time + ttl)
+            return lock_id
 
-        binary = bin(hashed)[2:]
+        return None
 
-        zeros = self._leading_zeros(binary)
+    def release_lock(self, resource, lock_id):
+        if resource in self.locks:
+            existing_lock_id, _ = self.locks[resource]
 
-        self.buckets[bucket_index] = max(self.buckets[bucket_index], zeros)
+            if existing_lock_id == lock_id:
+                del self.locks[resource]
+                return True
 
-    def estimate(self):
-        total = sum([2 ** (-bucket) for bucket in self.buckets])
-        return int(self.num_buckets ** 2 / total)
+        return False
