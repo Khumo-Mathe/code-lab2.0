@@ -1,33 +1,33 @@
+import random
 import time
-import uuid
 
 
-class DistributedLock:
-    def __init__(self):
-        self.locks = {}
+class Node:
+    def __init__(self, node_id):
+        self.node_id = node_id
+        self.state = "FOLLOWER"
+        self.votes = 0
+        self.term = 0
 
-    def acquire_lock(self, resource, ttl=5):
-        current_time = time.time()
-        lock_id = str(uuid.uuid4())
+    def start_election(self, nodes):
+        self.state = "CANDIDATE"
+        self.term += 1
+        self.votes = 1  # vote for self
 
-        if resource not in self.locks:
-            self.locks[resource] = (lock_id, current_time + ttl)
-            return lock_id
+        for node in nodes:
+            if node.node_id != self.node_id:
+                if node.vote(self.term):
+                    self.votes += 1
 
-        existing_lock_id, expiry = self.locks[resource]
+        if self.votes > len(nodes) // 2:
+            self.state = "LEADER"
+            return True
 
-        if current_time > expiry:
-            self.locks[resource] = (lock_id, current_time + ttl)
-            return lock_id
+        self.state = "FOLLOWER"
+        return False
 
-        return None
-
-    def release_lock(self, resource, lock_id):
-        if resource in self.locks:
-            existing_lock_id, _ = self.locks[resource]
-
-            if existing_lock_id == lock_id:
-                del self.locks[resource]
-                return True
-
+    def vote(self, term):
+        if term >= self.term:
+            self.term = term
+            return True
         return False
