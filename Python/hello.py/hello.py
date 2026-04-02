@@ -1,23 +1,31 @@
-import hashlib
+from collections import defaultdict
 
 
-def hash_data(data):
-    return hashlib.sha256(data.encode()).hexdigest()
+def map_function(data):
+    results = []
+
+    for line in data:
+        words = line.split()
+
+        for word in words:
+            results.append((word, 1))
+
+    return results
 
 
-def build_merkle_tree(data_list):
-    nodes = [hash_data(item) for item in data_list]
+def reduce_function(mapped_data):
+    result = defaultdict(int)
 
-    while len(nodes) > 1:
-        new_level = []
+    for word, count in mapped_data:
+        result[word] += count
 
-        for i in range(0, len(nodes), 2):
-            left = nodes[i]
-            right = nodes[i + 1] if i + 1 < len(nodes) else left
+    return dict(result)
 
-            combined = hash_data(left + right)
-            new_level.append(combined)
 
-        nodes = new_level
+def map_reduce(data_chunks):
+    mapped = []
 
-    return nodes[0]
+    for chunk in data_chunks:
+        mapped.extend(map_function(chunk))
+
+    return reduce_function(mapped)
