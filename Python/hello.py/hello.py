@@ -1,85 +1,82 @@
-from collections import defaultdict
-from datetime import datetime
+from heapq import heappush, heappop
 
 
-def analyze_login_attempts(logs):
+def find_shortest_path(graph, start, end):
     """
-    Analyze login attempts and detect suspicious activity.
+    Uses Dijkstra's Algorithm to find the shortest path
+    between two locations in a weighted graph.
 
     Args:
-        logs (list): List of dictionaries containing:
-            {
-                "username": str,
-                "ip": str,
-                "status": "SUCCESS" or "FAILED",
-                "timestamp": "YYYY-MM-DD HH:MM:SS"
-            }
+        graph (dict): Graph structure with weights
+        start (str): Starting node
+        end (str): Destination node
 
     Returns:
-        dict: Summary of suspicious login behavior.
+        dict: Shortest distance and path
     """
 
-    failed_attempts = defaultdict(int)
-    suspicious_ips = set()
-    successful_logins = []
+    priority_queue = []
+    heappush(priority_queue, (0, start))
 
-    for log in logs:
-        username = log["username"]
-        ip = log["ip"]
-        status = log["status"]
+    distances = {
+        node: float("inf")
+        for node in graph
+    }
 
-        timestamp = datetime.strptime(
-            log["timestamp"],
-            "%Y-%m-%d %H:%M:%S"
-        )
+    previous_nodes = {
+        node: None
+        for node in graph
+    }
 
-        if status == "FAILED":
-            failed_attempts[ip] += 1
+    distances[start] = 0
 
-            # Mark IP as suspicious after 3 failed attempts
-            if failed_attempts[ip] >= 3:
-                suspicious_ips.add(ip)
+    while priority_queue:
+        current_distance, current_node = heappop(priority_queue)
 
-        elif status == "SUCCESS":
-            successful_logins.append({
-                "username": username,
-                "ip": ip,
-                "time": timestamp
-            })
+        # Skip outdated queue entries
+        if current_distance > distances[current_node]:
+            continue
+
+        for neighbor, weight in graph[current_node].items():
+            distance = current_distance + weight
+
+            # Found shorter path
+            if distance < distances[neighbor]:
+                distances[neighbor] = distance
+                previous_nodes[neighbor] = current_node
+
+                heappush(
+                    priority_queue,
+                    (distance, neighbor)
+                )
+
+    # Reconstruct path
+    path = []
+    current = end
+
+    while current:
+        path.append(current)
+        current = previous_nodes[current]
+
+    path.reverse()
 
     return {
-        "suspicious_ips": list(suspicious_ips),
-        "failed_attempts": dict(failed_attempts),
-        "successful_logins": successful_logins
+        "distance": distances[end],
+        "path": path
     }
 
 
-# Example usage
-sample_logs = [
-    {
-        "username": "khumo",
-        "ip": "192.168.1.10",
-        "status": "FAILED",
-        "timestamp": "2026-05-11 10:00:00"
-    },
-    {
-        "username": "khumo",
-        "ip": "192.168.1.10",
-        "status": "FAILED",
-        "timestamp": "2026-05-11 10:01:00"
-    },
-    {
-        "username": "khumo",
-        "ip": "192.168.1.10",
-        "status": "FAILED",
-        "timestamp": "2026-05-11 10:02:00"
-    },
-    {
-        "username": "admin",
-        "ip": "10.0.0.5",
-        "status": "SUCCESS",
-        "timestamp": "2026-05-11 10:05:00"
-    }
-]
+# Example weighted graph
+city_map = {
+    "A": {"B": 4, "C": 2},
+    "B": {"A": 4, "D": 5},
+    "C": {"A": 2, "D": 8, "E": 10},
+    "D": {"B": 5, "C": 8, "E": 2},
+    "E": {"C": 10, "D": 2}
+}
 
-result = analyze_login_attempts(sample_logs)
+result = find_shortest_path(
+    city_map,
+    start="A",
+    end="E"
+)
