@@ -1,64 +1,76 @@
-from collections import deque
+from collections import Counter
+import re
 
 
-class RateLimiter:
+def search_documents(documents, query, top_n=3):
     """
-    Simple API Rate Limiter using Sliding Window logic.
+    Simple search engine ranking algorithm.
 
-    Restricts how many requests a user can make
-    within a time window.
+    Scores documents based on how often
+    query words appear.
     """
 
-    def __init__(self, max_requests, window_seconds):
-        self.max_requests = max_requests
-        self.window_seconds = window_seconds
+    # Clean and tokenize query
+    query_words = re.findall(r"\w+", query.lower())
 
-        # Store request timestamps per user
-        self.user_requests = {}
+    document_scores = []
 
-    def allow_request(self, user_id, current_time):
+    for document in documents:
+        text = document["content"].lower()
+
+        # Tokenize words
+        words = re.findall(r"\w+", text)
+
+        # Count word frequencies
+        word_counts = Counter(words)
+
+        score = 0
+
+        # Add score for matching query words
+        for word in query_words:
+            score += word_counts[word]
+
+        document_scores.append({
+            "title": document["title"],
+            "score": score
+        })
+
+    # Sort by highest score
+    ranked_results = sorted(
+        document_scores,
+        key=lambda item: item["score"],
+        reverse=True
+    )
+
+    return ranked_results[:top_n]
+
+
+# Example documents
+documents = [
+    {
+        "title": "Python Backend Development",
+        "content": """
+        Python is commonly used in backend systems,
+        APIs, automation, and cloud engineering.
         """
-        Check whether a request should be allowed.
-
-        Args:
-            user_id (str): Unique user identifier
-            current_time (int): Current timestamp in seconds
-
-        Returns:
-            bool: True if allowed, False otherwise
+    },
+    {
+        "title": "Network Security Basics",
+        "content": """
+        Cybersecurity includes firewalls,
+        authentication, and intrusion detection.
         """
-
-        if user_id not in self.user_requests:
-            self.user_requests[user_id] = deque()
-
-        requests = self.user_requests[user_id]
-
-        # Remove expired requests outside the window
-        while requests and (
-            current_time - requests[0]
-        ) >= self.window_seconds:
-            requests.popleft()
-
-        # Block if limit reached
-        if len(requests) >= self.max_requests:
-            return False
-
-        # Store current request timestamp
-        requests.append(current_time)
-
-        return True
-
-
-# Example usage
-limiter = RateLimiter(
-    max_requests=3,
-    window_seconds=10
-)
-
-results = [
-    limiter.allow_request("khumo", 1),
-    limiter.allow_request("khumo", 2),
-    limiter.allow_request("khumo", 3),
-    limiter.allow_request("khumo", 4),  # Blocked
-    limiter.allow_request("khumo", 12)  # Allowed again
+    },
+    {
+        "title": "Cloud Computing",
+        "content": """
+        Cloud platforms like Azure and AWS
+        provide scalable infrastructure.
+        """
+    }
 ]
+
+results = search_documents(
+    documents,
+    query="python cloud backend"
+)
