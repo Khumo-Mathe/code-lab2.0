@@ -1,93 +1,110 @@
 from collections import defaultdict
 
 
-class TransactionMonitor:
+class InventoryManager:
     """
-    Detect suspicious financial transactions
-    based on configurable rules.
+    Inventory tracking and low-stock alert system.
     """
 
-    def __init__(self, transaction_limit):
-        self.transaction_limit = transaction_limit
-        self.user_totals = defaultdict(float)
+    def __init__(self):
+        self.inventory = defaultdict(dict)
 
-    def process_transactions(self, transactions):
+    def add_product(
+        self,
+        sku,
+        name,
+        quantity,
+        reorder_level
+    ):
         """
-        Analyze transactions and flag suspicious activity.
-
-        Args:
-            transactions (list): List of transaction dictionaries
-
-        Returns:
-            dict: Summary report
+        Add or update a product in inventory.
         """
 
-        flagged_transactions = []
-        processed_transactions = []
+        self.inventory[sku] = {
+            "name": name,
+            "quantity": quantity,
+            "reorder_level": reorder_level
+        }
 
-        for transaction in transactions:
-            user_id = transaction["user_id"]
-            amount = transaction["amount"]
-            location = transaction["location"]
+    def update_stock(self, sku, quantity_change):
+        """
+        Increase or decrease stock quantity.
+        """
 
-            self.user_totals[user_id] += amount
-
-            suspicious_reasons = []
-
-            # Rule 1: Large single transaction
-            if amount > self.transaction_limit:
-                suspicious_reasons.append(
-                    "Large transaction amount"
-                )
-
-            # Rule 2: Rapid spending threshold
-            if self.user_totals[user_id] > (
-                self.transaction_limit * 3
-            ):
-                suspicious_reasons.append(
-                    "High cumulative spending"
-                )
-
-            result = {
-                "user_id": user_id,
-                "amount": amount,
-                "location": location,
-                "suspicious": bool(suspicious_reasons),
-                "reasons": suspicious_reasons
+        if sku not in self.inventory:
+            return {
+                "success": False,
+                "message": "Product not found"
             }
 
-            processed_transactions.append(result)
-
-            if suspicious_reasons:
-                flagged_transactions.append(result)
+        self.inventory[sku]["quantity"] += quantity_change
 
         return {
-            "flagged_transactions": flagged_transactions,
-            "processed_transactions": processed_transactions
+            "success": True,
+            "updated_product": self.inventory[sku]
+        }
+
+    def get_low_stock_products(self):
+        """
+        Return all products below reorder level.
+        """
+
+        low_stock = []
+
+        for sku, product in self.inventory.items():
+            if (
+                product["quantity"]
+                <= product["reorder_level"]
+            ):
+                low_stock.append({
+                    "sku": sku,
+                    "name": product["name"],
+                    "quantity": product["quantity"]
+                })
+
+        return low_stock
+
+    def generate_inventory_report(self):
+        """
+        Generate inventory summary report.
+        """
+
+        total_products = len(self.inventory)
+
+        total_items = sum(
+            product["quantity"]
+            for product in self.inventory.values()
+        )
+
+        return {
+            "total_products": total_products,
+            "total_items": total_items,
+            "low_stock_products": (
+                self.get_low_stock_products()
+            )
         }
 
 
-# Example transactions
-transactions = [
-    {
-        "user_id": "U100",
-        "amount": 2500,
-        "location": "Johannesburg"
-    },
-    {
-        "user_id": "U100",
-        "amount": 4000,
-        "location": "Cape Town"
-    },
-    {
-        "user_id": "U100",
-        "amount": 7000,
-        "location": "Durban"
-    }
-]
+# Example usage
+manager = InventoryManager()
 
-monitor = TransactionMonitor(
-    transaction_limit=5000
+manager.add_product(
+    sku="KB001",
+    name="Mechanical Keyboard",
+    quantity=15,
+    reorder_level=10
 )
 
-report = monitor.process_transactions(transactions)
+manager.add_product(
+    sku="MS002",
+    name="Wireless Mouse",
+    quantity=5,
+    reorder_level=8
+)
+
+manager.update_stock(
+    sku="KB001",
+    quantity_change=-7
+)
+
+report = manager.generate_inventory_report()
