@@ -1,76 +1,93 @@
-from collections import Counter
-import re
+from collections import defaultdict
 
 
-def search_documents(documents, query, top_n=3):
+class TransactionMonitor:
     """
-    Simple search engine ranking algorithm.
-
-    Scores documents based on how often
-    query words appear.
+    Detect suspicious financial transactions
+    based on configurable rules.
     """
 
-    # Clean and tokenize query
-    query_words = re.findall(r"\w+", query.lower())
+    def __init__(self, transaction_limit):
+        self.transaction_limit = transaction_limit
+        self.user_totals = defaultdict(float)
 
-    document_scores = []
-
-    for document in documents:
-        text = document["content"].lower()
-
-        # Tokenize words
-        words = re.findall(r"\w+", text)
-
-        # Count word frequencies
-        word_counts = Counter(words)
-
-        score = 0
-
-        # Add score for matching query words
-        for word in query_words:
-            score += word_counts[word]
-
-        document_scores.append({
-            "title": document["title"],
-            "score": score
-        })
-
-    # Sort by highest score
-    ranked_results = sorted(
-        document_scores,
-        key=lambda item: item["score"],
-        reverse=True
-    )
-
-    return ranked_results[:top_n]
-
-
-# Example documents
-documents = [
-    {
-        "title": "Python Backend Development",
-        "content": """
-        Python is commonly used in backend systems,
-        APIs, automation, and cloud engineering.
+    def process_transactions(self, transactions):
         """
+        Analyze transactions and flag suspicious activity.
+
+        Args:
+            transactions (list): List of transaction dictionaries
+
+        Returns:
+            dict: Summary report
+        """
+
+        flagged_transactions = []
+        processed_transactions = []
+
+        for transaction in transactions:
+            user_id = transaction["user_id"]
+            amount = transaction["amount"]
+            location = transaction["location"]
+
+            self.user_totals[user_id] += amount
+
+            suspicious_reasons = []
+
+            # Rule 1: Large single transaction
+            if amount > self.transaction_limit:
+                suspicious_reasons.append(
+                    "Large transaction amount"
+                )
+
+            # Rule 2: Rapid spending threshold
+            if self.user_totals[user_id] > (
+                self.transaction_limit * 3
+            ):
+                suspicious_reasons.append(
+                    "High cumulative spending"
+                )
+
+            result = {
+                "user_id": user_id,
+                "amount": amount,
+                "location": location,
+                "suspicious": bool(suspicious_reasons),
+                "reasons": suspicious_reasons
+            }
+
+            processed_transactions.append(result)
+
+            if suspicious_reasons:
+                flagged_transactions.append(result)
+
+        return {
+            "flagged_transactions": flagged_transactions,
+            "processed_transactions": processed_transactions
+        }
+
+
+# Example transactions
+transactions = [
+    {
+        "user_id": "U100",
+        "amount": 2500,
+        "location": "Johannesburg"
     },
     {
-        "title": "Network Security Basics",
-        "content": """
-        Cybersecurity includes firewalls,
-        authentication, and intrusion detection.
-        """
+        "user_id": "U100",
+        "amount": 4000,
+        "location": "Cape Town"
     },
     {
-        "title": "Cloud Computing",
-        "content": """
-        Cloud platforms like Azure and AWS
-        provide scalable infrastructure.
-        """
+        "user_id": "U100",
+        "amount": 7000,
+        "location": "Durban"
     }
 ]
 
-results = search_documents(
-    documents,
-    query="python cloud backend"
+monitor = TransactionMonitor(
+    transaction_limit=5000
 )
+
+report = monitor.process_transactions(transactions)
