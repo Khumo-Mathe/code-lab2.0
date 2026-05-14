@@ -1,96 +1,134 @@
-from datetime import datetime
-import hashlib
+from math import radians, sin, cos, sqrt, atan2
 
 
-class FileIntegrityMonitor:
+class DeliveryRouter:
     """
-    Detect file modifications using hashing.
-    Similar to systems used in cybersecurity
-    and server monitoring.
+    Delivery route optimization system.
+
+    Finds the nearest driver to a delivery request
+    using geographical coordinates.
     """
 
     def __init__(self):
-        self.file_registry = {}
+        self.drivers = []
 
-    def generate_hash(self, content):
+    def add_driver(
+        self,
+        driver_id,
+        latitude,
+        longitude,
+        available=True
+    ):
         """
-        Generate SHA256 hash of file content.
-        """
-
-        return hashlib.sha256(
-            content.encode()
-        ).hexdigest()
-
-    def register_file(self, filename, content):
-        """
-        Register a file and store its hash.
+        Register a driver.
         """
 
-        file_hash = self.generate_hash(content)
+        self.drivers.append({
+            "driver_id": driver_id,
+            "latitude": latitude,
+            "longitude": longitude,
+            "available": available
+        })
 
-        self.file_registry[filename] = {
-            "hash": file_hash,
-            "last_checked": datetime.now()
-        }
-
-        return {
-            "filename": filename,
-            "hash": file_hash
-        }
-
-    def verify_file(self, filename, current_content):
+    def calculate_distance(
+        self,
+        lat1,
+        lon1,
+        lat2,
+        lon2
+    ):
         """
-        Verify whether file has changed.
+        Calculate distance using Haversine Formula.
         """
 
-        if filename not in self.file_registry:
+        earth_radius_km = 6371
+
+        dlat = radians(lat2 - lat1)
+        dlon = radians(lon2 - lon1)
+
+        a = (
+            sin(dlat / 2) ** 2
+            + cos(radians(lat1))
+            * cos(radians(lat2))
+            * sin(dlon / 2) ** 2
+        )
+
+        c = 2 * atan2(
+            sqrt(a),
+            sqrt(1 - a)
+        )
+
+        return earth_radius_km * c
+
+    def find_nearest_driver(
+        self,
+        customer_latitude,
+        customer_longitude
+    ):
+        """
+        Find closest available driver.
+        """
+
+        nearest_driver = None
+        shortest_distance = float("inf")
+
+        for driver in self.drivers:
+
+            if not driver["available"]:
+                continue
+
+            distance = self.calculate_distance(
+                customer_latitude,
+                customer_longitude,
+                driver["latitude"],
+                driver["longitude"]
+            )
+
+            if distance < shortest_distance:
+                shortest_distance = distance
+                nearest_driver = driver
+
+        if not nearest_driver:
             return {
                 "success": False,
-                "message": "File not registered"
+                "message": "No available drivers"
             }
 
-        current_hash = self.generate_hash(
-            current_content
-        )
-
-        original_hash = (
-            self.file_registry[filename]["hash"]
-        )
-
-        file_modified = (
-            current_hash != original_hash
-        )
-
-        self.file_registry[filename][
-            "last_checked"
-        ] = datetime.now()
-
         return {
-            "filename": filename,
-            "modified": file_modified,
-            "original_hash": original_hash,
-            "current_hash": current_hash
+            "success": True,
+            "driver_id": (
+                nearest_driver["driver_id"]
+            ),
+            "distance_km": round(
+                shortest_distance,
+                2
+            )
         }
-
-    def get_registered_files(self):
-        """
-        Return all monitored files.
-        """
-
-        return list(self.file_registry.keys())
 
 
 # Example usage
-monitor = FileIntegrityMonitor()
+router = DeliveryRouter()
 
-monitor.register_file(
-    filename="config.txt",
-    content="server_port=8080"
+router.add_driver(
+    driver_id="DRV100",
+    latitude=-26.2041,
+    longitude=28.0473
 )
 
-verification = monitor.verify_file(
-    filename="config.txt",
-    current_content="server_port=9090"
+router.add_driver(
+    driver_id="DRV101",
+    latitude=-26.1076,
+    longitude=28.0567
 )
 
-files = monitor.get_registered_files()
+router.add_driver(
+    driver_id="DRV102",
+    latitude=-25.7479,
+    longitude=28.2293,
+    available=False
+)
+
+nearest_driver = router.find_nearest_driver(
+    customer_latitude=-26.1952,
+    customer_longitude=28.0341
+)
