@@ -1,138 +1,96 @@
-from collections import defaultdict
 from datetime import datetime
+import hashlib
 
 
-class TaskQueue:
+class FileIntegrityMonitor:
     """
-    Simulates a background job processing system.
-    Similar to Celery, RabbitMQ workers, or cloud task queues.
+    Detect file modifications using hashing.
+    Similar to systems used in cybersecurity
+    and server monitoring.
     """
 
     def __init__(self):
-        self.pending_tasks = []
-        self.completed_tasks = []
-        self.failed_tasks = []
+        self.file_registry = {}
 
-    def add_task(self, task_name, payload):
+    def generate_hash(self, content):
         """
-        Add a task to the queue.
+        Generate SHA256 hash of file content.
         """
 
-        task = {
-            "id": len(self.pending_tasks) + 1,
-            "task_name": task_name,
-            "payload": payload,
-            "status": "PENDING",
-            "created_at": datetime.now()
+        return hashlib.sha256(
+            content.encode()
+        ).hexdigest()
+
+    def register_file(self, filename, content):
+        """
+        Register a file and store its hash.
+        """
+
+        file_hash = self.generate_hash(content)
+
+        self.file_registry[filename] = {
+            "hash": file_hash,
+            "last_checked": datetime.now()
         }
-
-        self.pending_tasks.append(task)
-
-        return task
-
-    def process_next_task(self):
-        """
-        Process the next queued task.
-        """
-
-        if not self.pending_tasks:
-            return {
-                "success": False,
-                "message": "No pending tasks"
-            }
-
-        task = self.pending_tasks.pop(0)
-
-        try:
-            # Simulate processing logic
-            result = self.execute_task(task)
-
-            task["status"] = "COMPLETED"
-            task["result"] = result
-            task["completed_at"] = datetime.now()
-
-            self.completed_tasks.append(task)
-
-            return {
-                "success": True,
-                "task": task
-            }
-
-        except Exception as error:
-            task["status"] = "FAILED"
-            task["error"] = str(error)
-
-            self.failed_tasks.append(task)
-
-            return {
-                "success": False,
-                "task": task
-            }
-
-    def execute_task(self, task):
-        """
-        Simulate task execution.
-        """
-
-        task_name = task["task_name"]
-
-        if task_name == "send_email":
-            return (
-                f"Email sent to "
-                f"{task['payload']['recipient']}"
-            )
-
-        elif task_name == "generate_report":
-            return (
-                f"Report generated for "
-                f"{task['payload']['department']}"
-            )
-
-        elif task_name == "resize_image":
-            return (
-                f"Image resized to "
-                f"{task['payload']['resolution']}"
-            )
-
-        raise ValueError("Unknown task type")
-
-    def queue_statistics(self):
-        """
-        Return queue metrics.
-        """
 
         return {
-            "pending": len(self.pending_tasks),
-            "completed": len(self.completed_tasks),
-            "failed": len(self.failed_tasks)
+            "filename": filename,
+            "hash": file_hash
         }
+
+    def verify_file(self, filename, current_content):
+        """
+        Verify whether file has changed.
+        """
+
+        if filename not in self.file_registry:
+            return {
+                "success": False,
+                "message": "File not registered"
+            }
+
+        current_hash = self.generate_hash(
+            current_content
+        )
+
+        original_hash = (
+            self.file_registry[filename]["hash"]
+        )
+
+        file_modified = (
+            current_hash != original_hash
+        )
+
+        self.file_registry[filename][
+            "last_checked"
+        ] = datetime.now()
+
+        return {
+            "filename": filename,
+            "modified": file_modified,
+            "original_hash": original_hash,
+            "current_hash": current_hash
+        }
+
+    def get_registered_files(self):
+        """
+        Return all monitored files.
+        """
+
+        return list(self.file_registry.keys())
 
 
 # Example usage
-queue = TaskQueue()
+monitor = FileIntegrityMonitor()
 
-queue.add_task(
-    task_name="send_email",
-    payload={
-        "recipient": "khumo@example.com"
-    }
+monitor.register_file(
+    filename="config.txt",
+    content="server_port=8080"
 )
 
-queue.add_task(
-    task_name="generate_report",
-    payload={
-        "department": "Finance"
-    }
+verification = monitor.verify_file(
+    filename="config.txt",
+    current_content="server_port=9090"
 )
 
-queue.add_task(
-    task_name="resize_image",
-    payload={
-        "resolution": "1920x1080"
-    }
-)
-
-processed_1 = queue.process_next_task()
-processed_2 = queue.process_next_task()
-
-stats = queue.queue_statistics()
+files = monitor.get_registered_files()
