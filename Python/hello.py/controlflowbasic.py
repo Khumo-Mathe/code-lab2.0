@@ -1,110 +1,102 @@
 from collections import defaultdict
+from datetime import datetime
 
 
-class InventoryManager:
+class URLShortener:
     """
-    Inventory tracking and low-stock alert system.
+    Basic URL shortening service logic.
+    Similar to bit.ly or tinyurl systems.
     """
 
     def __init__(self):
-        self.inventory = defaultdict(dict)
+        self.url_database = {}
+        self.click_analytics = defaultdict(list)
+        self.counter = 1000
 
-    def add_product(
-        self,
-        sku,
-        name,
-        quantity,
-        reorder_level
-    ):
+    def shorten_url(self, original_url):
         """
-        Add or update a product in inventory.
+        Generate a short code for a URL.
+
+        Returns:
+            dict
         """
 
-        self.inventory[sku] = {
-            "name": name,
-            "quantity": quantity,
-            "reorder_level": reorder_level
+        short_code = f"url{self.counter}"
+
+        self.url_database[short_code] = original_url
+
+        self.counter += 1
+
+        return {
+            "short_code": short_code,
+            "short_url": f"https://sho.rt/{short_code}"
         }
 
-    def update_stock(self, sku, quantity_change):
+    def resolve_url(self, short_code, visitor_ip):
         """
-        Increase or decrease stock quantity.
+        Resolve short URL back to original URL
+        and track analytics.
         """
 
-        if sku not in self.inventory:
+        if short_code not in self.url_database:
             return {
                 "success": False,
-                "message": "Product not found"
+                "message": "URL not found"
             }
 
-        self.inventory[sku]["quantity"] += quantity_change
+        self.click_analytics[short_code].append({
+            "ip": visitor_ip,
+            "timestamp": datetime.now()
+        })
 
         return {
             "success": True,
-            "updated_product": self.inventory[sku]
+            "original_url": (
+                self.url_database[short_code]
+            )
         }
 
-    def get_low_stock_products(self):
+    def get_analytics(self, short_code):
         """
-        Return all products below reorder level.
-        """
-
-        low_stock = []
-
-        for sku, product in self.inventory.items():
-            if (
-                product["quantity"]
-                <= product["reorder_level"]
-            ):
-                low_stock.append({
-                    "sku": sku,
-                    "name": product["name"],
-                    "quantity": product["quantity"]
-                })
-
-        return low_stock
-
-    def generate_inventory_report(self):
-        """
-        Generate inventory summary report.
+        Return analytics for a short URL.
         """
 
-        total_products = len(self.inventory)
+        visits = self.click_analytics[short_code]
 
-        total_items = sum(
-            product["quantity"]
-            for product in self.inventory.values()
-        )
+        unique_ips = {
+            visit["ip"]
+            for visit in visits
+        }
 
         return {
-            "total_products": total_products,
-            "total_items": total_items,
-            "low_stock_products": (
-                self.get_low_stock_products()
-            )
+            "total_clicks": len(visits),
+            "unique_visitors": len(unique_ips),
+            "visit_logs": visits
         }
 
 
 # Example usage
-manager = InventoryManager()
+service = URLShortener()
 
-manager.add_product(
-    sku="KB001",
-    name="Mechanical Keyboard",
-    quantity=15,
-    reorder_level=10
+shortened = service.shorten_url(
+    "https://www.example.com/python-course"
 )
 
-manager.add_product(
-    sku="MS002",
-    name="Wireless Mouse",
-    quantity=5,
-    reorder_level=8
+service.resolve_url(
+    short_code=shortened["short_code"],
+    visitor_ip="192.168.1.5"
 )
 
-manager.update_stock(
-    sku="KB001",
-    quantity_change=-7
+service.resolve_url(
+    short_code=shortened["short_code"],
+    visitor_ip="192.168.1.5"
 )
 
-report = manager.generate_inventory_report()
+service.resolve_url(
+    short_code=shortened["short_code"],
+    visitor_ip="10.0.0.2"
+)
+
+analytics = service.get_analytics(
+    shortened["short_code"]
+)
