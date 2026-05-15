@@ -1,134 +1,134 @@
-from math import radians, sin, cos, sqrt, atan2
+from collections import defaultdict
+from datetime import datetime
 
 
-class DeliveryRouter:
+class RecommendationEngine:
     """
-    Delivery route optimization system.
-
-    Finds the nearest driver to a delivery request
-    using geographical coordinates.
+    Basic recommendation system using
+    user interaction history.
     """
 
     def __init__(self):
-        self.drivers = []
+        self.user_activity = defaultdict(list)
+        self.product_popularity = defaultdict(int)
 
-    def add_driver(
+    def track_interaction(
         self,
-        driver_id,
-        latitude,
-        longitude,
-        available=True
+        user_id,
+        product_id,
+        interaction_type
     ):
         """
-        Register a driver.
+        Track user activity.
         """
 
-        self.drivers.append({
-            "driver_id": driver_id,
-            "latitude": latitude,
-            "longitude": longitude,
-            "available": available
-        })
+        interaction = {
+            "product_id": product_id,
+            "interaction_type": interaction_type,
+            "timestamp": datetime.now()
+        }
 
-    def calculate_distance(
-        self,
-        lat1,
-        lon1,
-        lat2,
-        lon2
-    ):
-        """
-        Calculate distance using Haversine Formula.
-        """
-
-        earth_radius_km = 6371
-
-        dlat = radians(lat2 - lat1)
-        dlon = radians(lon2 - lon1)
-
-        a = (
-            sin(dlat / 2) ** 2
-            + cos(radians(lat1))
-            * cos(radians(lat2))
-            * sin(dlon / 2) ** 2
+        self.user_activity[user_id].append(
+            interaction
         )
 
-        c = 2 * atan2(
-            sqrt(a),
-            sqrt(1 - a)
-        )
+        # Increase popularity score
+        self.product_popularity[product_id] += 1
 
-        return earth_radius_km * c
-
-    def find_nearest_driver(
+    def recommend_products(
         self,
-        customer_latitude,
-        customer_longitude
+        user_id,
+        limit=5
     ):
         """
-        Find closest available driver.
+        Recommend products based on
+        user interaction history.
         """
 
-        nearest_driver = None
-        shortest_distance = float("inf")
+        interacted_products = {
+            activity["product_id"]
+            for activity in self.user_activity[user_id]
+        }
 
-        for driver in self.drivers:
+        recommendations = []
 
-            if not driver["available"]:
-                continue
+        # Recommend popular products
+        for product_id, score in sorted(
+            self.product_popularity.items(),
+            key=lambda item: item[1],
+            reverse=True
+        ):
 
-            distance = self.calculate_distance(
-                customer_latitude,
-                customer_longitude,
-                driver["latitude"],
-                driver["longitude"]
-            )
+            if product_id not in interacted_products:
+                recommendations.append({
+                    "product_id": product_id,
+                    "popularity_score": score
+                })
 
-            if distance < shortest_distance:
-                shortest_distance = distance
-                nearest_driver = driver
+            if len(recommendations) >= limit:
+                break
 
-        if not nearest_driver:
-            return {
-                "success": False,
-                "message": "No available drivers"
-            }
+        return recommendations
+
+    def user_summary(self, user_id):
+        """
+        Return user activity statistics.
+        """
+
+        interactions = self.user_activity[user_id]
+
+        interaction_counts = defaultdict(int)
+
+        for activity in interactions:
+            interaction_counts[
+                activity["interaction_type"]
+            ] += 1
 
         return {
-            "success": True,
-            "driver_id": (
-                nearest_driver["driver_id"]
-            ),
-            "distance_km": round(
-                shortest_distance,
-                2
+            "total_interactions": len(interactions),
+            "interaction_breakdown": dict(
+                interaction_counts
             )
         }
 
 
 # Example usage
-router = DeliveryRouter()
+engine = RecommendationEngine()
 
-router.add_driver(
-    driver_id="DRV100",
-    latitude=-26.2041,
-    longitude=28.0473
+engine.track_interaction(
+    user_id="khumo",
+    product_id="P100",
+    interaction_type="VIEW"
 )
 
-router.add_driver(
-    driver_id="DRV101",
-    latitude=-26.1076,
-    longitude=28.0567
+engine.track_interaction(
+    user_id="khumo",
+    product_id="P200",
+    interaction_type="PURCHASE"
 )
 
-router.add_driver(
-    driver_id="DRV102",
-    latitude=-25.7479,
-    longitude=28.2293,
-    available=False
+engine.track_interaction(
+    user_id="user_2",
+    product_id="P300",
+    interaction_type="VIEW"
 )
 
-nearest_driver = router.find_nearest_driver(
-    customer_latitude=-26.1952,
-    customer_longitude=28.0341
+engine.track_interaction(
+    user_id="user_3",
+    product_id="P300",
+    interaction_type="PURCHASE"
+)
+
+engine.track_interaction(
+    user_id="user_4",
+    product_id="P400",
+    interaction_type="VIEW"
+)
+
+recommendations = engine.recommend_products(
+    user_id="khumo"
+)
+
+summary = engine.user_summary(
+    user_id="khumo"
 )
