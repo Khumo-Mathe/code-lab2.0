@@ -1,134 +1,132 @@
-from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
-class RecommendationEngine:
+class SessionManager:
     """
-    Basic recommendation system using
-    user interaction history.
+    Manage user authentication sessions.
+    Similar to backend session/token systems.
     """
 
-    def __init__(self):
-        self.user_activity = defaultdict(list)
-        self.product_popularity = defaultdict(int)
-
-    def track_interaction(
-        self,
-        user_id,
-        product_id,
-        interaction_type
-    ):
-        """
-        Track user activity.
-        """
-
-        interaction = {
-            "product_id": product_id,
-            "interaction_type": interaction_type,
-            "timestamp": datetime.now()
-        }
-
-        self.user_activity[user_id].append(
-            interaction
+    def __init__(self, session_timeout_minutes=30):
+        self.active_sessions = {}
+        self.session_timeout = timedelta(
+            minutes=session_timeout_minutes
         )
 
-        # Increase popularity score
-        self.product_popularity[product_id] += 1
-
-    def recommend_products(
+    def create_session(
         self,
         user_id,
-        limit=5
+        ip_address
     ):
         """
-        Recommend products based on
-        user interaction history.
+        Create a new user session.
         """
 
-        interacted_products = {
-            activity["product_id"]
-            for activity in self.user_activity[user_id]
+        session_id = (
+            f"session_{user_id}_"
+            f"{len(self.active_sessions) + 1}"
+        )
+
+        session_data = {
+            "user_id": user_id,
+            "ip_address": ip_address,
+            "created_at": datetime.now(),
+            "last_activity": datetime.now()
         }
 
-        recommendations = []
-
-        # Recommend popular products
-        for product_id, score in sorted(
-            self.product_popularity.items(),
-            key=lambda item: item[1],
-            reverse=True
-        ):
-
-            if product_id not in interacted_products:
-                recommendations.append({
-                    "product_id": product_id,
-                    "popularity_score": score
-                })
-
-            if len(recommendations) >= limit:
-                break
-
-        return recommendations
-
-    def user_summary(self, user_id):
-        """
-        Return user activity statistics.
-        """
-
-        interactions = self.user_activity[user_id]
-
-        interaction_counts = defaultdict(int)
-
-        for activity in interactions:
-            interaction_counts[
-                activity["interaction_type"]
-            ] += 1
+        self.active_sessions[
+            session_id
+        ] = session_data
 
         return {
-            "total_interactions": len(interactions),
-            "interaction_breakdown": dict(
-                interaction_counts
-            )
+            "success": True,
+            "session_id": session_id
         }
+
+    def validate_session(self, session_id):
+        """
+        Check if session is valid and active.
+        """
+
+        if session_id not in self.active_sessions:
+            return {
+                "valid": False,
+                "message": "Session not found"
+            }
+
+        session = self.active_sessions[
+            session_id
+        ]
+
+        current_time = datetime.now()
+
+        inactive_duration = (
+            current_time
+            - session["last_activity"]
+        )
+
+        # Expire inactive sessions
+        if inactive_duration > self.session_timeout:
+
+            del self.active_sessions[
+                session_id
+            ]
+
+            return {
+                "valid": False,
+                "message": "Session expired"
+            }
+
+        # Update activity timestamp
+        session["last_activity"] = current_time
+
+        return {
+            "valid": True,
+            "user_id": session["user_id"]
+        }
+
+    def logout(self, session_id):
+        """
+        Destroy a session.
+        """
+
+        if session_id not in self.active_sessions:
+            return {
+                "success": False,
+                "message": "Session not found"
+            }
+
+        del self.active_sessions[session_id]
+
+        return {
+            "success": True,
+            "message": "Logged out successfully"
+        }
+
+    def active_user_count(self):
+        """
+        Return number of active sessions.
+        """
+
+        return len(self.active_sessions)
 
 
 # Example usage
-engine = RecommendationEngine()
+manager = SessionManager(
+    session_timeout_minutes=15
+)
 
-engine.track_interaction(
+session = manager.create_session(
     user_id="khumo",
-    product_id="P100",
-    interaction_type="VIEW"
+    ip_address="192.168.1.10"
 )
 
-engine.track_interaction(
-    user_id="khumo",
-    product_id="P200",
-    interaction_type="PURCHASE"
+validation = manager.validate_session(
+    session["session_id"]
 )
 
-engine.track_interaction(
-    user_id="user_2",
-    product_id="P300",
-    interaction_type="VIEW"
-)
+active_users = manager.active_user_count()
 
-engine.track_interaction(
-    user_id="user_3",
-    product_id="P300",
-    interaction_type="PURCHASE"
-)
-
-engine.track_interaction(
-    user_id="user_4",
-    product_id="P400",
-    interaction_type="VIEW"
-)
-
-recommendations = engine.recommend_products(
-    user_id="khumo"
-)
-
-summary = engine.user_summary(
-    user_id="khumo"
+logout_result = manager.logout(
+    session["session_id"]
 )
