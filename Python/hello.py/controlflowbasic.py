@@ -1,132 +1,133 @@
-from datetime import datetime, timedelta
+from collections import defaultdict
+from datetime import datetime
 
 
-class SessionManager:
+class LogAnalyzer:
     """
-    Manage user authentication sessions.
-    Similar to backend session/token systems.
+    Analyze application/server logs
+    and detect unusual activity.
     """
 
-    def __init__(self, session_timeout_minutes=30):
-        self.active_sessions = {}
-        self.session_timeout = timedelta(
-            minutes=session_timeout_minutes
-        )
+    def __init__(self):
+        self.logs = []
+        self.error_counts = defaultdict(int)
+        self.ip_activity = defaultdict(int)
 
-    def create_session(
+    def add_log(
         self,
-        user_id,
+        level,
+        message,
         ip_address
     ):
         """
-        Create a new user session.
+        Store a log entry.
         """
 
-        session_id = (
-            f"session_{user_id}_"
-            f"{len(self.active_sessions) + 1}"
-        )
-
-        session_data = {
-            "user_id": user_id,
+        log_entry = {
+            "level": level,
+            "message": message,
             "ip_address": ip_address,
-            "created_at": datetime.now(),
-            "last_activity": datetime.now()
+            "timestamp": datetime.now()
         }
 
-        self.active_sessions[
-            session_id
-        ] = session_data
+        self.logs.append(log_entry)
 
-        return {
-            "success": True,
-            "session_id": session_id
-        }
+        # Track error frequency
+        if level == "ERROR":
+            self.error_counts[ip_address] += 1
 
-    def validate_session(self, session_id):
+        # Track IP activity
+        self.ip_activity[ip_address] += 1
+
+    def detect_suspicious_ips(
+        self,
+        error_threshold=5,
+        activity_threshold=20
+    ):
         """
-        Check if session is valid and active.
+        Detect suspicious behavior based on
+        errors or excessive requests.
         """
 
-        if session_id not in self.active_sessions:
-            return {
-                "valid": False,
-                "message": "Session not found"
-            }
+        suspicious_ips = []
 
-        session = self.active_sessions[
-            session_id
-        ]
+        for ip in self.ip_activity:
 
-        current_time = datetime.now()
+            if (
+                self.error_counts[ip]
+                >= error_threshold
+            ):
+                suspicious_ips.append({
+                    "ip_address": ip,
+                    "reason": "High error rate"
+                })
 
-        inactive_duration = (
-            current_time
-            - session["last_activity"]
+            elif (
+                self.ip_activity[ip]
+                >= activity_threshold
+            ):
+                suspicious_ips.append({
+                    "ip_address": ip,
+                    "reason": "Excessive activity"
+                })
+
+        return suspicious_ips
+
+    def generate_report(self):
+        """
+        Generate system log statistics.
+        """
+
+        total_logs = len(self.logs)
+
+        error_logs = sum(
+            1
+            for log in self.logs
+            if log["level"] == "ERROR"
         )
 
-        # Expire inactive sessions
-        if inactive_duration > self.session_timeout:
+        warning_logs = sum(
+            1
+            for log in self.logs
+            if log["level"] == "WARNING"
+        )
 
-            del self.active_sessions[
-                session_id
-            ]
-
-            return {
-                "valid": False,
-                "message": "Session expired"
-            }
-
-        # Update activity timestamp
-        session["last_activity"] = current_time
+        info_logs = sum(
+            1
+            for log in self.logs
+            if log["level"] == "INFO"
+        )
 
         return {
-            "valid": True,
-            "user_id": session["user_id"]
+            "total_logs": total_logs,
+            "error_logs": error_logs,
+            "warning_logs": warning_logs,
+            "info_logs": info_logs,
+            "suspicious_ips": (
+                self.detect_suspicious_ips()
+            )
         }
-
-    def logout(self, session_id):
-        """
-        Destroy a session.
-        """
-
-        if session_id not in self.active_sessions:
-            return {
-                "success": False,
-                "message": "Session not found"
-            }
-
-        del self.active_sessions[session_id]
-
-        return {
-            "success": True,
-            "message": "Logged out successfully"
-        }
-
-    def active_user_count(self):
-        """
-        Return number of active sessions.
-        """
-
-        return len(self.active_sessions)
 
 
 # Example usage
-manager = SessionManager(
-    session_timeout_minutes=15
-)
+analyzer = LogAnalyzer()
 
-session = manager.create_session(
-    user_id="khumo",
+analyzer.add_log(
+    level="INFO",
+    message="User logged in",
     ip_address="192.168.1.10"
 )
 
-validation = manager.validate_session(
-    session["session_id"]
+analyzer.add_log(
+    level="ERROR",
+    message="Failed login attempt",
+    ip_address="192.168.1.10"
 )
 
-active_users = manager.active_user_count()
-
-logout_result = manager.logout(
-    session["session_id"]
+analyzer.add_log(
+    level="WARNING",
+    message="High memory usage",
+    ip_address="10.0.0.5"
 )
+
+report = analyzer.generate_report()
