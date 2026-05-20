@@ -1,117 +1,142 @@
+from collections import defaultdict
 from datetime import datetime
-import statistics
 
 
-class StockPriceAnalyzer:
+class APICache:
     """
-    Analyze stock price movements
-    and generate trading signals.
+    Simple in-memory caching system.
+
+    Reduces repeated expensive API/database calls.
     """
 
     def __init__(self):
-        self.price_history = []
+        self.cache = {}
+        self.cache_hits = 0
+        self.cache_misses = 0
+        self.request_frequency = defaultdict(int)
 
-    def add_price(
+    def set(
         self,
-        symbol,
-        price
+        key,
+        value,
+        ttl_seconds
     ):
         """
-        Store stock price data.
+        Store data in cache.
         """
 
-        self.price_history.append({
-            "symbol": symbol,
-            "price": price,
-            "timestamp": datetime.now()
-        })
-
-    def moving_average(
-        self,
-        period
-    ):
-        """
-        Calculate moving average.
-        """
-
-        if len(self.price_history) < period:
-            return None
-
-        recent_prices = [
-            entry["price"]
-            for entry in self.price_history[-period:]
-        ]
-
-        return round(
-            statistics.mean(recent_prices),
-            2
+        expiration_time = (
+            datetime.now().timestamp()
+            + ttl_seconds
         )
 
-    def generate_signal(self):
-        """
-        Generate simple trading signal.
-
-        Buy:
-            Short-term MA > Long-term MA
-
-        Sell:
-            Short-term MA < Long-term MA
-        """
-
-        short_ma = self.moving_average(3)
-        long_ma = self.moving_average(5)
-
-        if short_ma is None or long_ma is None:
-            return {
-                "signal": "INSUFFICIENT_DATA"
-            }
-
-        if short_ma > long_ma:
-            signal = "BUY"
-
-        elif short_ma < long_ma:
-            signal = "SELL"
-
-        else:
-            signal = "HOLD"
-
-        return {
-            "signal": signal,
-            "short_ma": short_ma,
-            "long_ma": long_ma
+        self.cache[key] = {
+            "value": value,
+            "expires_at": expiration_time
         }
 
-    def volatility(self):
+    def get(self, key):
         """
-        Calculate price volatility
-        using standard deviation.
+        Retrieve cached data if valid.
         """
 
-        if len(self.price_history) < 2:
-            return None
+        self.request_frequency[key] += 1
 
-        prices = [
-            entry["price"]
-            for entry in self.price_history
-        ]
+        if key not in self.cache:
+            self.cache_misses += 1
 
-        return round(
-            statistics.stdev(prices),
-            2
+            return {
+                "found": False,
+                "value": None
+            }
+
+        cached_item = self.cache[key]
+
+        current_time = datetime.now().timestamp()
+
+        # Remove expired cache entries
+        if current_time > cached_item["expires_at"]:
+
+            del self.cache[key]
+
+            self.cache_misses += 1
+
+            return {
+                "found": False,
+                "value": None
+            }
+
+        self.cache_hits += 1
+
+        return {
+            "found": True,
+            "value": cached_item["value"]
+        }
+
+    def delete(self, key):
+        """
+        Remove cache entry.
+        """
+
+        if key in self.cache:
+            del self.cache[key]
+
+            return {
+                "success": True
+            }
+
+        return {
+            "success": False,
+            "message": "Key not found"
+        }
+
+    def statistics(self):
+        """
+        Return cache performance metrics.
+        """
+
+        total_requests = (
+            self.cache_hits
+            + self.cache_misses
         )
+
+        hit_rate = 0
+
+        if total_requests > 0:
+            hit_rate = round(
+                (
+                    self.cache_hits
+                    / total_requests
+                ) * 100,
+                2
+            )
+
+        return {
+            "cache_hits": self.cache_hits,
+            "cache_misses": self.cache_misses,
+            "hit_rate_percent": hit_rate,
+            "stored_keys": len(self.cache)
+        }
 
 
 # Example usage
-analyzer = StockPriceAnalyzer()
+cache = APICache()
 
-prices = [100, 102, 105, 103, 108, 110]
+cache.set(
+    key="user_100_profile",
+    value={
+        "name": "Khumo",
+        "role": "Developer"
+    },
+    ttl_seconds=300
+)
 
-for price in prices:
-    analyzer.add_price(
-        symbol="AAPL",
-        price=price
-    )
+profile = cache.get(
+    "user_100_profile"
+)
 
-signal = analyzer.generate_signal()
+missing_data = cache.get(
+    "unknown_key"
+)
 
-volatility = analyzer.volatility()
+stats = cache.statistics()
