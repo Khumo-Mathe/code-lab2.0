@@ -1,133 +1,117 @@
-from collections import defaultdict
 from datetime import datetime
+import statistics
 
 
-class LogAnalyzer:
+class StockPriceAnalyzer:
     """
-    Analyze application/server logs
-    and detect unusual activity.
+    Analyze stock price movements
+    and generate trading signals.
     """
 
     def __init__(self):
-        self.logs = []
-        self.error_counts = defaultdict(int)
-        self.ip_activity = defaultdict(int)
+        self.price_history = []
 
-    def add_log(
+    def add_price(
         self,
-        level,
-        message,
-        ip_address
+        symbol,
+        price
     ):
         """
-        Store a log entry.
+        Store stock price data.
         """
 
-        log_entry = {
-            "level": level,
-            "message": message,
-            "ip_address": ip_address,
+        self.price_history.append({
+            "symbol": symbol,
+            "price": price,
             "timestamp": datetime.now()
-        }
+        })
 
-        self.logs.append(log_entry)
-
-        # Track error frequency
-        if level == "ERROR":
-            self.error_counts[ip_address] += 1
-
-        # Track IP activity
-        self.ip_activity[ip_address] += 1
-
-    def detect_suspicious_ips(
+    def moving_average(
         self,
-        error_threshold=5,
-        activity_threshold=20
+        period
     ):
         """
-        Detect suspicious behavior based on
-        errors or excessive requests.
+        Calculate moving average.
         """
 
-        suspicious_ips = []
+        if len(self.price_history) < period:
+            return None
 
-        for ip in self.ip_activity:
+        recent_prices = [
+            entry["price"]
+            for entry in self.price_history[-period:]
+        ]
 
-            if (
-                self.error_counts[ip]
-                >= error_threshold
-            ):
-                suspicious_ips.append({
-                    "ip_address": ip,
-                    "reason": "High error rate"
-                })
+        return round(
+            statistics.mean(recent_prices),
+            2
+        )
 
-            elif (
-                self.ip_activity[ip]
-                >= activity_threshold
-            ):
-                suspicious_ips.append({
-                    "ip_address": ip,
-                    "reason": "Excessive activity"
-                })
-
-        return suspicious_ips
-
-    def generate_report(self):
+    def generate_signal(self):
         """
-        Generate system log statistics.
+        Generate simple trading signal.
+
+        Buy:
+            Short-term MA > Long-term MA
+
+        Sell:
+            Short-term MA < Long-term MA
         """
 
-        total_logs = len(self.logs)
+        short_ma = self.moving_average(3)
+        long_ma = self.moving_average(5)
 
-        error_logs = sum(
-            1
-            for log in self.logs
-            if log["level"] == "ERROR"
-        )
+        if short_ma is None or long_ma is None:
+            return {
+                "signal": "INSUFFICIENT_DATA"
+            }
 
-        warning_logs = sum(
-            1
-            for log in self.logs
-            if log["level"] == "WARNING"
-        )
+        if short_ma > long_ma:
+            signal = "BUY"
 
-        info_logs = sum(
-            1
-            for log in self.logs
-            if log["level"] == "INFO"
-        )
+        elif short_ma < long_ma:
+            signal = "SELL"
+
+        else:
+            signal = "HOLD"
 
         return {
-            "total_logs": total_logs,
-            "error_logs": error_logs,
-            "warning_logs": warning_logs,
-            "info_logs": info_logs,
-            "suspicious_ips": (
-                self.detect_suspicious_ips()
-            )
+            "signal": signal,
+            "short_ma": short_ma,
+            "long_ma": long_ma
         }
+
+    def volatility(self):
+        """
+        Calculate price volatility
+        using standard deviation.
+        """
+
+        if len(self.price_history) < 2:
+            return None
+
+        prices = [
+            entry["price"]
+            for entry in self.price_history
+        ]
+
+        return round(
+            statistics.stdev(prices),
+            2
+        )
 
 
 # Example usage
-analyzer = LogAnalyzer()
+analyzer = StockPriceAnalyzer()
 
-analyzer.add_log(
-    level="INFO",
-    message="User logged in",
-    ip_address="192.168.1.10"
-)
+prices = [100, 102, 105, 103, 108, 110]
 
-analyzer.add_log(
-    level="ERROR",
-    message="Failed login attempt",
-    ip_address="192.168.1.10"
-)
+for price in prices:
+    analyzer.add_price(
+        symbol="AAPL",
+        price=price
+    )
 
-analyzer.add_log(
-    level="WARNING",
-    message="High memory usage",
-    ip_address="10.0.0.5"
-)
+signal = analyzer.generate_signal()
 
-report = analyzer.generate_report()
+volatility = analyzer.volatility()
