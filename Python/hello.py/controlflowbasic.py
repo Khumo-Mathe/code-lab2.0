@@ -2,141 +2,148 @@ from collections import defaultdict
 from datetime import datetime
 
 
-class APICache:
+class NotificationSystem:
     """
-    Simple in-memory caching system.
+    Event-driven notification service.
 
-    Reduces repeated expensive API/database calls.
+    Sends notifications through multiple channels.
     """
 
     def __init__(self):
-        self.cache = {}
-        self.cache_hits = 0
-        self.cache_misses = 0
-        self.request_frequency = defaultdict(int)
+        self.notifications = []
+        self.user_preferences = defaultdict(
+            lambda: {
+                "email": True,
+                "sms": False,
+                "push": True
+            }
+        )
 
-    def set(
+    def update_preferences(
         self,
-        key,
-        value,
-        ttl_seconds
+        user_id,
+        email=None,
+        sms=None,
+        push=None
     ):
         """
-        Store data in cache.
+        Update notification preferences.
         """
 
-        expiration_time = (
-            datetime.now().timestamp()
-            + ttl_seconds
+        preferences = self.user_preferences[user_id]
+
+        if email is not None:
+            preferences["email"] = email
+
+        if sms is not None:
+            preferences["sms"] = sms
+
+        if push is not None:
+            preferences["push"] = push
+
+        return preferences
+
+    def send_notification(
+        self,
+        user_id,
+        message,
+        notification_type
+    ):
+        """
+        Send notifications using enabled channels.
+        """
+
+        preferences = self.user_preferences[
+            user_id
+        ]
+
+        delivery_results = []
+
+        for channel, enabled in preferences.items():
+
+            if not enabled:
+                continue
+
+            delivery_results.append({
+                "channel": channel,
+                "status": "SENT"
+            })
+
+        notification_record = {
+            "user_id": user_id,
+            "message": message,
+            "type": notification_type,
+            "timestamp": datetime.now(),
+            "deliveries": delivery_results
+        }
+
+        self.notifications.append(
+            notification_record
         )
 
-        self.cache[key] = {
-            "value": value,
-            "expires_at": expiration_time
-        }
+        return notification_record
 
-    def get(self, key):
+    def notification_history(
+        self,
+        user_id
+    ):
         """
-        Retrieve cached data if valid.
-        """
-
-        self.request_frequency[key] += 1
-
-        if key not in self.cache:
-            self.cache_misses += 1
-
-            return {
-                "found": False,
-                "value": None
-            }
-
-        cached_item = self.cache[key]
-
-        current_time = datetime.now().timestamp()
-
-        # Remove expired cache entries
-        if current_time > cached_item["expires_at"]:
-
-            del self.cache[key]
-
-            self.cache_misses += 1
-
-            return {
-                "found": False,
-                "value": None
-            }
-
-        self.cache_hits += 1
-
-        return {
-            "found": True,
-            "value": cached_item["value"]
-        }
-
-    def delete(self, key):
-        """
-        Remove cache entry.
+        Return all notifications for a user.
         """
 
-        if key in self.cache:
-            del self.cache[key]
+        return [
+            notification
+            for notification in self.notifications
+            if notification["user_id"] == user_id
+        ]
 
-            return {
-                "success": True
-            }
-
-        return {
-            "success": False,
-            "message": "Key not found"
-        }
-
-    def statistics(self):
+    def analytics(self):
         """
-        Return cache performance metrics.
+        Generate notification statistics.
         """
 
-        total_requests = (
-            self.cache_hits
-            + self.cache_misses
+        total_notifications = len(
+            self.notifications
         )
 
-        hit_rate = 0
+        channel_usage = defaultdict(int)
 
-        if total_requests > 0:
-            hit_rate = round(
-                (
-                    self.cache_hits
-                    / total_requests
-                ) * 100,
-                2
+        for notification in self.notifications:
+
+            for delivery in notification[
+                "deliveries"
+            ]:
+
+                channel_usage[
+                    delivery["channel"]
+                ] += 1
+
+        return {
+            "total_notifications": (
+                total_notifications
+            ),
+            "channel_usage": dict(
+                channel_usage
             )
-
-        return {
-            "cache_hits": self.cache_hits,
-            "cache_misses": self.cache_misses,
-            "hit_rate_percent": hit_rate,
-            "stored_keys": len(self.cache)
         }
 
 
 # Example usage
-cache = APICache()
+system = NotificationSystem()
 
-cache.set(
-    key="user_100_profile",
-    value={
-        "name": "Khumo",
-        "role": "Developer"
-    },
-    ttl_seconds=300
+system.update_preferences(
+    user_id="khumo",
+    sms=True
 )
 
-profile = cache.get(
-    "user_100_profile"
+notification = system.send_notification(
+    user_id="khumo",
+    message="Your report is ready",
+    notification_type="REPORT"
 )
 
-missing_data = cache.get(
-    "unknown_key"
+history = system.notification_history(
+    user_id="khumo"
 )
 
-stats = cache.statistics()
+analytics = system.analytics()
