@@ -1,149 +1,146 @@
 from collections import defaultdict
 from datetime import datetime
+import uuid
 
 
-class NotificationSystem:
+class PaymentProcessor:
     """
-    Event-driven notification service.
-
-    Sends notifications through multiple channels.
+    Simulates a digital payment processing system.
     """
 
     def __init__(self):
-        self.notifications = []
-        self.user_preferences = defaultdict(
-            lambda: {
-                "email": True,
-                "sms": False,
-                "push": True
-            }
-        )
+        self.accounts = defaultdict(float)
+        self.transactions = []
 
-    def update_preferences(
+    def create_account(
         self,
         user_id,
-        email=None,
-        sms=None,
-        push=None
+        initial_balance=0
     ):
         """
-        Update notification preferences.
+        Create a user wallet/account.
         """
 
-        preferences = self.user_preferences[user_id]
+        self.accounts[user_id] = initial_balance
 
-        if email is not None:
-            preferences["email"] = email
-
-        if sms is not None:
-            preferences["sms"] = sms
-
-        if push is not None:
-            preferences["push"] = push
-
-        return preferences
-
-    def send_notification(
-        self,
-        user_id,
-        message,
-        notification_type
-    ):
-        """
-        Send notifications using enabled channels.
-        """
-
-        preferences = self.user_preferences[
-            user_id
-        ]
-
-        delivery_results = []
-
-        for channel, enabled in preferences.items():
-
-            if not enabled:
-                continue
-
-            delivery_results.append({
-                "channel": channel,
-                "status": "SENT"
-            })
-
-        notification_record = {
+        return {
             "user_id": user_id,
-            "message": message,
-            "type": notification_type,
-            "timestamp": datetime.now(),
-            "deliveries": delivery_results
+            "balance": initial_balance
         }
 
-        self.notifications.append(
-            notification_record
-        )
+    def transfer(
+        self,
+        sender,
+        receiver,
+        amount
+    ):
+        """
+        Transfer money between accounts.
+        """
 
-        return notification_record
+        if sender not in self.accounts:
+            return {
+                "success": False,
+                "message": "Sender not found"
+            }
 
-    def notification_history(
+        if receiver not in self.accounts:
+            return {
+                "success": False,
+                "message": "Receiver not found"
+            }
+
+        if amount <= 0:
+            return {
+                "success": False,
+                "message": "Invalid amount"
+            }
+
+        if self.accounts[sender] < amount:
+            return {
+                "success": False,
+                "message": "Insufficient funds"
+            }
+
+        # Debit sender
+        self.accounts[sender] -= amount
+
+        # Credit receiver
+        self.accounts[receiver] += amount
+
+        transaction = {
+            "transaction_id": str(uuid.uuid4()),
+            "sender": sender,
+            "receiver": receiver,
+            "amount": amount,
+            "timestamp": datetime.now(),
+            "status": "SUCCESS"
+        }
+
+        self.transactions.append(transaction)
+
+        return {
+            "success": True,
+            "transaction": transaction
+        }
+
+    def account_balance(self, user_id):
+        """
+        Return account balance.
+        """
+
+        if user_id not in self.accounts:
+            return None
+
+        return {
+            "user_id": user_id,
+            "balance": round(
+                self.accounts[user_id],
+                2
+            )
+        }
+
+    def transaction_history(
         self,
         user_id
     ):
         """
-        Return all notifications for a user.
+        Return user transaction history.
         """
 
         return [
-            notification
-            for notification in self.notifications
-            if notification["user_id"] == user_id
-        ]
-
-    def analytics(self):
-        """
-        Generate notification statistics.
-        """
-
-        total_notifications = len(
-            self.notifications
-        )
-
-        channel_usage = defaultdict(int)
-
-        for notification in self.notifications:
-
-            for delivery in notification[
-                "deliveries"
-            ]:
-
-                channel_usage[
-                    delivery["channel"]
-                ] += 1
-
-        return {
-            "total_notifications": (
-                total_notifications
-            ),
-            "channel_usage": dict(
-                channel_usage
+            transaction
+            for transaction in self.transactions
+            if (
+                transaction["sender"] == user_id
+                or transaction["receiver"] == user_id
             )
-        }
+        ]
 
 
 # Example usage
-system = NotificationSystem()
+processor = PaymentProcessor()
 
-system.update_preferences(
+processor.create_account(
     user_id="khumo",
-    sms=True
+    initial_balance=5000
 )
 
-notification = system.send_notification(
-    user_id="khumo",
-    message="Your report is ready",
-    notification_type="REPORT"
+processor.create_account(
+    user_id="merchant_1",
+    initial_balance=1000
 )
 
-history = system.notification_history(
-    user_id="khumo"
+payment = processor.transfer(
+    sender="khumo",
+    receiver="merchant_1",
+    amount=750
 )
 
-analytics = system.analytics()
+balance = processor.account_balance(
+    "khumo"
+)
+
+history = processor.transaction_history(
+    "khumo"
+)
