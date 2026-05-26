@@ -1,146 +1,171 @@
 from collections import defaultdict
 from datetime import datetime
-import uuid
+import hashlib
 
 
-class PaymentProcessor:
+class Blockchain:
     """
-    Simulates a digital payment processing system.
+    Simplified blockchain implementation.
+
+    Demonstrates how blocks are linked
+    and verified using hashes.
     """
 
     def __init__(self):
-        self.accounts = defaultdict(float)
-        self.transactions = []
+        self.chain = []
+        self.pending_transactions = []
 
-    def create_account(
-        self,
-        user_id,
-        initial_balance=0
-    ):
+        # Create genesis block
+        self.create_block(
+            previous_hash="0"
+        )
+
+    def generate_hash(self, block_data):
         """
-        Create a user wallet/account.
+        Generate SHA256 hash.
         """
 
-        self.accounts[user_id] = initial_balance
+        encoded_data = (
+            str(block_data).encode()
+        )
 
-        return {
-            "user_id": user_id,
-            "balance": initial_balance
-        }
+        return hashlib.sha256(
+            encoded_data
+        ).hexdigest()
 
-    def transfer(
+    def create_transaction(
         self,
         sender,
         receiver,
         amount
     ):
         """
-        Transfer money between accounts.
+        Add pending transaction.
         """
 
-        if sender not in self.accounts:
-            return {
-                "success": False,
-                "message": "Sender not found"
-            }
-
-        if receiver not in self.accounts:
-            return {
-                "success": False,
-                "message": "Receiver not found"
-            }
-
-        if amount <= 0:
-            return {
-                "success": False,
-                "message": "Invalid amount"
-            }
-
-        if self.accounts[sender] < amount:
-            return {
-                "success": False,
-                "message": "Insufficient funds"
-            }
-
-        # Debit sender
-        self.accounts[sender] -= amount
-
-        # Credit receiver
-        self.accounts[receiver] += amount
-
         transaction = {
-            "transaction_id": str(uuid.uuid4()),
             "sender": sender,
             "receiver": receiver,
             "amount": amount,
-            "timestamp": datetime.now(),
-            "status": "SUCCESS"
+            "timestamp": datetime.now()
         }
 
-        self.transactions.append(transaction)
+        self.pending_transactions.append(
+            transaction
+        )
 
-        return {
-            "success": True,
-            "transaction": transaction
-        }
+        return transaction
 
-    def account_balance(self, user_id):
-        """
-        Return account balance.
-        """
-
-        if user_id not in self.accounts:
-            return None
-
-        return {
-            "user_id": user_id,
-            "balance": round(
-                self.accounts[user_id],
-                2
-            )
-        }
-
-    def transaction_history(
+    def create_block(
         self,
-        user_id
+        previous_hash
     ):
         """
-        Return user transaction history.
+        Create a new block.
         """
 
-        return [
-            transaction
-            for transaction in self.transactions
-            if (
-                transaction["sender"] == user_id
-                or transaction["receiver"] == user_id
+        block = {
+            "index": len(self.chain) + 1,
+            "timestamp": datetime.now(),
+            "transactions": (
+                self.pending_transactions
+            ),
+            "previous_hash": previous_hash
+        }
+
+        block_hash = self.generate_hash(
+            block
+        )
+
+        block["hash"] = block_hash
+
+        self.chain.append(block)
+
+        # Reset pending transactions
+        self.pending_transactions = []
+
+        return block
+
+    def mine_block(self):
+        """
+        Mine pending transactions.
+        """
+
+        previous_block = self.chain[-1]
+
+        return self.create_block(
+            previous_hash=previous_block["hash"]
+        )
+
+    def validate_chain(self):
+        """
+        Verify blockchain integrity.
+        """
+
+        for index in range(
+            1,
+            len(self.chain)
+        ):
+
+            current_block = self.chain[index]
+
+            previous_block = (
+                self.chain[index - 1]
             )
-        ]
+
+            # Check hash linkage
+            if (
+                current_block["previous_hash"]
+                != previous_block["hash"]
+            ):
+                return False
+
+            # Recalculate current hash
+            recalculated_hash = (
+                self.generate_hash({
+                    "index": current_block["index"],
+                    "timestamp": (
+                        current_block[
+                            "timestamp"
+                        ]
+                    ),
+                    "transactions": (
+                        current_block[
+                            "transactions"
+                        ]
+                    ),
+                    "previous_hash": (
+                        current_block[
+                            "previous_hash"
+                        ]
+                    )
+                })
+            )
+
+            if (
+                recalculated_hash
+                != current_block["hash"]
+            ):
+                return False
+
+        return True
 
 
 # Example usage
-processor = PaymentProcessor()
+blockchain = Blockchain()
 
-processor.create_account(
-    user_id="khumo",
-    initial_balance=5000
+blockchain.create_transaction(
+    sender="Khumo",
+    receiver="Merchant",
+    amount=150
 )
 
-processor.create_account(
-    user_id="merchant_1",
-    initial_balance=1000
+blockchain.create_transaction(
+    sender="Alice",
+    receiver="Bob",
+    amount=75
 )
 
-payment = processor.transfer(
-    sender="khumo",
-    receiver="merchant_1",
-    amount=750
-)
+new_block = blockchain.mine_block()
 
-balance = processor.account_balance(
-    "khumo"
-)
-
-history = processor.transaction_history(
-    "khumo"
-)
+chain_valid = blockchain.validate_chain()
