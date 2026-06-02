@@ -1,171 +1,120 @@
-from collections import defaultdict
 from datetime import datetime
-import hashlib
+import heapq
 
 
-class Blockchain:
+class Scheduler:
     """
-    Simplified blockchain implementation.
+    Priority-based task scheduler.
 
-    Demonstrates how blocks are linked
-    and verified using hashes.
+    Similar to operating system schedulers,
+    job schedulers, and cloud orchestration systems.
     """
 
     def __init__(self):
-        self.chain = []
-        self.pending_transactions = []
+        self.task_queue = []
+        self.completed_tasks = []
 
-        # Create genesis block
-        self.create_block(
-            previous_hash="0"
-        )
-
-    def generate_hash(self, block_data):
-        """
-        Generate SHA256 hash.
-        """
-
-        encoded_data = (
-            str(block_data).encode()
-        )
-
-        return hashlib.sha256(
-            encoded_data
-        ).hexdigest()
-
-    def create_transaction(
+    def schedule_task(
         self,
-        sender,
-        receiver,
-        amount
+        task_name,
+        priority,
+        execution_time
     ):
         """
-        Add pending transaction.
+        Add a task to the scheduler.
+
+        Lower priority number = higher priority.
         """
 
-        transaction = {
-            "sender": sender,
-            "receiver": receiver,
-            "amount": amount,
-            "timestamp": datetime.now()
+        task = {
+            "task_name": task_name,
+            "priority": priority,
+            "execution_time": execution_time,
+            "created_at": datetime.now()
         }
 
-        self.pending_transactions.append(
-            transaction
+        heapq.heappush(
+            self.task_queue,
+            (
+                priority,
+                datetime.now().timestamp(),
+                task
+            )
         )
 
-        return transaction
+        return task
 
-    def create_block(
-        self,
-        previous_hash
-    ):
+    def run_next_task(self):
         """
-        Create a new block.
+        Execute the highest-priority task.
         """
 
-        block = {
-            "index": len(self.chain) + 1,
-            "timestamp": datetime.now(),
-            "transactions": (
-                self.pending_transactions
+        if not self.task_queue:
+            return {
+                "success": False,
+                "message": "No pending tasks"
+            }
+
+        _, _, task = heapq.heappop(
+            self.task_queue
+        )
+
+        task["status"] = "COMPLETED"
+        task["completed_at"] = datetime.now()
+
+        self.completed_tasks.append(task)
+
+        return {
+            "success": True,
+            "task": task
+        }
+
+    def pending_tasks(self):
+        """
+        View pending tasks.
+        """
+
+        return [
+            item[2]
+            for item in self.task_queue
+        ]
+
+    def statistics(self):
+        """
+        Scheduler metrics.
+        """
+
+        return {
+            "pending_tasks": len(
+                self.task_queue
             ),
-            "previous_hash": previous_hash
+            "completed_tasks": len(
+                self.completed_tasks
+            )
         }
-
-        block_hash = self.generate_hash(
-            block
-        )
-
-        block["hash"] = block_hash
-
-        self.chain.append(block)
-
-        # Reset pending transactions
-        self.pending_transactions = []
-
-        return block
-
-    def mine_block(self):
-        """
-        Mine pending transactions.
-        """
-
-        previous_block = self.chain[-1]
-
-        return self.create_block(
-            previous_hash=previous_block["hash"]
-        )
-
-    def validate_chain(self):
-        """
-        Verify blockchain integrity.
-        """
-
-        for index in range(
-            1,
-            len(self.chain)
-        ):
-
-            current_block = self.chain[index]
-
-            previous_block = (
-                self.chain[index - 1]
-            )
-
-            # Check hash linkage
-            if (
-                current_block["previous_hash"]
-                != previous_block["hash"]
-            ):
-                return False
-
-            # Recalculate current hash
-            recalculated_hash = (
-                self.generate_hash({
-                    "index": current_block["index"],
-                    "timestamp": (
-                        current_block[
-                            "timestamp"
-                        ]
-                    ),
-                    "transactions": (
-                        current_block[
-                            "transactions"
-                        ]
-                    ),
-                    "previous_hash": (
-                        current_block[
-                            "previous_hash"
-                        ]
-                    )
-                })
-            )
-
-            if (
-                recalculated_hash
-                != current_block["hash"]
-            ):
-                return False
-
-        return True
 
 
 # Example usage
-blockchain = Blockchain()
+scheduler = Scheduler()
 
-blockchain.create_transaction(
-    sender="Khumo",
-    receiver="Merchant",
-    amount=150
+scheduler.schedule_task(
+    task_name="Backup Database",
+    priority=1,
+    execution_time=300
 )
 
-blockchain.create_transaction(
-    sender="Alice",
-    receiver="Bob",
-    amount=75
+scheduler.schedule_task(
+    task_name="Generate Reports",
+    priority=3,
+    execution_time=120
 )
 
-new_block = blockchain.mine_block()
+scheduler.schedule_task(
+    task_name="Send Emails",
+    priority=2,
+    execution_time=60
+)
 
-chain_valid = blockchain.validate_chain()
+next_task = scheduler.run_next_task()
+
+stats = scheduler.statistics()
