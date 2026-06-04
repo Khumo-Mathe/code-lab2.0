@@ -1,120 +1,91 @@
-from datetime import datetime
-import heapq
+from collections import OrderedDict
 
 
-class Scheduler:
+class LRUCache:
     """
-    Priority-based task scheduler.
+    Least Recently Used (LRU) Cache.
 
-    Similar to operating system schedulers,
-    job schedulers, and cloud orchestration systems.
+    When the cache is full, the least recently
+    accessed item is removed first.
     """
 
-    def __init__(self):
-        self.task_queue = []
-        self.completed_tasks = []
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.cache = OrderedDict()
 
-    def schedule_task(
-        self,
-        task_name,
-        priority,
-        execution_time
-    ):
+    def get(self, key):
         """
-        Add a task to the scheduler.
+        Retrieve a value from cache.
 
-        Lower priority number = higher priority.
+        Returns:
+            dict
         """
 
-        task = {
-            "task_name": task_name,
-            "priority": priority,
-            "execution_time": execution_time,
-            "created_at": datetime.now()
-        }
-
-        heapq.heappush(
-            self.task_queue,
-            (
-                priority,
-                datetime.now().timestamp(),
-                task
-            )
-        )
-
-        return task
-
-    def run_next_task(self):
-        """
-        Execute the highest-priority task.
-        """
-
-        if not self.task_queue:
+        if key not in self.cache:
             return {
-                "success": False,
-                "message": "No pending tasks"
+                "found": False,
+                "value": None
             }
 
-        _, _, task = heapq.heappop(
-            self.task_queue
-        )
-
-        task["status"] = "COMPLETED"
-        task["completed_at"] = datetime.now()
-
-        self.completed_tasks.append(task)
+        # Move to end because it was recently used
+        self.cache.move_to_end(key)
 
         return {
-            "success": True,
-            "task": task
+            "found": True,
+            "value": self.cache[key]
         }
 
-    def pending_tasks(self):
+    def put(self, key, value):
         """
-        View pending tasks.
-        """
-
-        return [
-            item[2]
-            for item in self.task_queue
-        ]
-
-    def statistics(self):
-        """
-        Scheduler metrics.
+        Add or update cache entry.
         """
 
-        return {
-            "pending_tasks": len(
-                self.task_queue
-            ),
-            "completed_tasks": len(
-                self.completed_tasks
+        # Update existing key
+        if key in self.cache:
+            self.cache.move_to_end(key)
+
+        self.cache[key] = value
+
+        # Remove oldest item if full
+        if len(self.cache) > self.capacity:
+
+            evicted_key, evicted_value = (
+                self.cache.popitem(last=False)
             )
+
+            return {
+                "evicted": {
+                    "key": evicted_key,
+                    "value": evicted_value
+                }
+            }
+
+        return {
+            "evicted": None
         }
+
+    def current_state(self):
+        """
+        View cache contents.
+        """
+
+        return list(self.cache.items())
 
 
 # Example usage
-scheduler = Scheduler()
+cache = LRUCache(capacity=3)
 
-scheduler.schedule_task(
-    task_name="Backup Database",
-    priority=1,
-    execution_time=300
+cache.put("user_1", "Khumo")
+cache.put("user_2", "Alice")
+cache.put("user_3", "Bob")
+
+# Access user_1 (now recently used)
+cache.get("user_1")
+
+# Adding another item causes eviction
+eviction = cache.put(
+    "user_4",
+    "Charlie"
 )
 
-scheduler.schedule_task(
-    task_name="Generate Reports",
-    priority=3,
-    execution_time=120
-)
-
-scheduler.schedule_task(
-    task_name="Send Emails",
-    priority=2,
-    execution_time=60
-)
-
-next_task = scheduler.run_next_task()
-
-stats = scheduler.statistics()
+state = cache.current_state()
