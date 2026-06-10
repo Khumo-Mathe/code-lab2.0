@@ -1,91 +1,105 @@
-from collections import OrderedDict
+from collections import defaultdict
 
 
-class LRUCache:
+class LoadBalancer:
     """
-    Least Recently Used (LRU) Cache.
+    Round Robin Load Balancer.
 
-    When the cache is full, the least recently
-    accessed item is removed first.
+    Distributes requests evenly
+    across multiple servers.
     """
 
-    def __init__(self, capacity):
-        self.capacity = capacity
-        self.cache = OrderedDict()
+    def __init__(self):
+        self.servers = []
+        self.current_index = 0
+        self.request_counts = defaultdict(int)
 
-    def get(self, key):
+    def add_server(
+        self,
+        server_id
+    ):
         """
-        Retrieve a value from cache.
-
-        Returns:
-            dict
+        Register a server.
         """
 
-        if key not in self.cache:
-            return {
-                "found": False,
-                "value": None
-            }
-
-        # Move to end because it was recently used
-        self.cache.move_to_end(key)
+        self.servers.append(server_id)
 
         return {
-            "found": True,
-            "value": self.cache[key]
+            "server_id": server_id,
+            "status": "ACTIVE"
         }
 
-    def put(self, key, value):
+    def remove_server(
+        self,
+        server_id
+    ):
         """
-        Add or update cache entry.
+        Remove a server.
         """
 
-        # Update existing key
-        if key in self.cache:
-            self.cache.move_to_end(key)
+        if server_id not in self.servers:
+            return {
+                "success": False
+            }
 
-        self.cache[key] = value
+        self.servers.remove(server_id)
 
-        # Remove oldest item if full
-        if len(self.cache) > self.capacity:
+        return {
+            "success": True
+        }
 
-            evicted_key, evicted_value = (
-                self.cache.popitem(last=False)
+    def route_request(
+        self,
+        request_id
+    ):
+        """
+        Assign request to next server.
+        """
+
+        if not self.servers:
+            return {
+                "success": False,
+                "message": "No servers available"
+            }
+
+        server = self.servers[
+            self.current_index
+        ]
+
+        self.request_counts[server] += 1
+
+        self.current_index = (
+            self.current_index + 1
+        ) % len(self.servers)
+
+        return {
+            "request_id": request_id,
+            "server": server
+        }
+
+    def statistics(self):
+        """
+        Server utilization report.
+        """
+
+        return {
+            "servers": self.servers,
+            "requests_processed": dict(
+                self.request_counts
             )
-
-            return {
-                "evicted": {
-                    "key": evicted_key,
-                    "value": evicted_value
-                }
-            }
-
-        return {
-            "evicted": None
         }
-
-    def current_state(self):
-        """
-        View cache contents.
-        """
-
-        return list(self.cache.items())
 
 
 # Example usage
-cache = LRUCache(capacity=3)
+lb = LoadBalancer()
 
-cache.put("user_1", "Khumo")
-cache.put("user_2", "Alice")
-cache.put("user_3", "Bob")
+lb.add_server("web-01")
+lb.add_server("web-02")
+lb.add_server("web-03")
 
-# Access user_1 (now recently used)
-cache.get("user_1")
+request_1 = lb.route_request("REQ-001")
+request_2 = lb.route_request("REQ-002")
+request_3 = lb.route_request("REQ-003")
+request_4 = lb.route_request("REQ-004")
 
-# Adding another item causes eviction
-eviction = cache.put(
-    "user_4",
-    "Charlie"
-)
-
-state = cache.current_state()
+stats = lb.statistics()
